@@ -30,7 +30,7 @@ class Server(object):
         self.delta = 10/100. # m
         self.correcting_distance = 0 # indicates whether the robot is too far (1), too close (-1) or stopped (0)
         self.k_lin_forward = 0.8 # linear velocity proportion parameter (for forward motion)
-        self.k_lin_reverse = 1.0 # linear velocity proportion parameter (for reverse motion)
+        self.k_lin_reverse = 1.5 # linear velocity proportion parameter (for reverse motion)
         self.k_ang = (15.0/1.0) # angular velocity proportion parameter
         # Velocity smoothing parameters (be sure to make these values floats by adding a decimal point)
         self.frequency = 60. # Hz
