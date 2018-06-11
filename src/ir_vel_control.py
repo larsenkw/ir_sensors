@@ -146,7 +146,7 @@ class Server(object):
                     self.command_Twist.linear.x = 0.0
                     self.correcting_distance = 0
                 else:
-                    self.command_Twist.linear.x = self.k_lin_forward*self.d_error
+                    self.command_Twist.linear.x = self.k_lin_reverse*self.d_error
 
         #----- Angular Velocity -----#
         # Angular velocity is proportional to the number of sensors that are maxed out
