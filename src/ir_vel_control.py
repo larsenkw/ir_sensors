@@ -32,10 +32,10 @@ class Server(object):
         self.k_lin_forward = 0.8 # linear velocity proportion parameter (for forward motion)
         self.k_lin_reverse = 1.0 # linear velocity proportion parameter (for reverse motion)
         self.k_ang = (15.0/1.0) # angular velocity proportion parameter
-        # Velocity smoothing parameters
-        self.frequency = 1 # Hz
-        self.max_accel_lin = 1 # m/s^2
-        self.max_accel_ang = 1 # rad/s^2
+        # Velocity smoothing parameters (be sure to make these values floats by adding a decimal point)
+        self.frequency = 60. # Hz
+        self.max_accel_lin = 1. # m/s^2
+        self.max_accel_ang = 1. # rad/s^2
         self.delta_v_lin = self.max_accel_lin/self.frequency # maximum change in velocity since previous command
         self.delta_v_ang = self.max_accel_ang/self.frequency # maximum change in angular velocity
         self.command_Twist.linear.x = 0
@@ -184,6 +184,9 @@ class Server(object):
                 self.smoothed_Twist.angular.z = self.command_Twist.angular.z
         else:
             self.smoothed_Twist.angular.z = self.previous_Twist.angular.z - self.delta_v_ang
+
+        #FIXME: Make sure this works as the previous controller
+        #self.smoothed_Twist = self.command_Twist
 
 
 def ir_vel_control(server):
