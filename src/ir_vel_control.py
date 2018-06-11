@@ -38,11 +38,11 @@ class Server(object):
         self.max_accel_ang = 1. # rad/s^2
         self.delta_v_lin = self.max_accel_lin/self.frequency # maximum change in velocity since previous command
         self.delta_v_ang = self.max_accel_ang/self.frequency # maximum change in angular velocity
-        self.command_Twist.linear.x = 0
-        self.command_Twist.angular.z = 0
+        self.command_Twist.linear.x = 0.
+        self.command_Twist.angular.z = 0.
         self.smoothed_Twist = Twist() # final Twist command sent to turtlebot after being smoothed
-        self.smoothed_Twist.linear.x = 0
-        self.smoothed_Twist.angular.z = 0
+        self.smoothed_Twist.linear.x = 0.
+        self.smoothed_Twist.angular.z = 0.
         self.previous_Twist = Twist() # previously seen Twist command from last publish
         self.previous_TWist = self.smoothed_Twist
         # Create Publisher
