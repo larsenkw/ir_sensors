@@ -1,2 +1,2 @@
 Header header
-int16[6] data
+int16[] data

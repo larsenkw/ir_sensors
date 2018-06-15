@@ -39,20 +39,3 @@ Then remake the folder with the following command.
 $ rosrun rosserial_arduino make_libraries.py ~/sketchbook/libraries
 
 A new 'ros_lib' folder will appear which should contain the messages you created in your package. Navigate to the 'ros_lib' folder and make sure you package name is listed there when using 'ls'.
-
-================================================================================
-Arduino Troubleshooting
-================================================================================
-One of the errors I have often received is:
-
-[ERROR] [WallTime: 1529003151.564960] Unable to sync with device; possible link problem or link software version mismatch such as hydro rosserial_python with groovy Arduino
-
-You can try restarting the Arduino by unplugging and replugging. You can also restart the computer, that has fixed the issue sometimes. One other thing to check is that the Arduino Baud rate is set to match the ROS one. ROS will tell you what is it connecting to and how fast.
-
-[INFO] [WallTime: 1529003134.460763] Connecting to /dev/ttyACM0 at 57600 baud
-
-Make sure the Arduino baud rate matches. You can force it to be a certain value by starting the serial connection with:
-
-Serial.begin(57600)
-
-Then is should be able to sync.
