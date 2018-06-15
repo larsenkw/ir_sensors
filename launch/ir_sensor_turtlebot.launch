@@ -12,7 +12,7 @@
   </node>
 
   <!-- start IR data conversion node -->
-  <node pkg='ir_sensors' type='ir_data_process.py' name='ir_data_process' />
+  <node pkg="ir_sensors" type="ir_data_process.py" name="ir_data_process" />
 
   <!-- start velocity control node  -->
   <node pkg="ir_sensors" type="ir_vel_control.py" name="ir_vel_control" />
