@@ -56,3 +56,9 @@ Make sure the Arduino baud rate matches. You can force it to be a certain value 
 Serial.begin(57600)
 
 Then is should be able to sync.
+
+If you get the error "Permission denied: '/dev/ttyACM0'", one possible fix is to change the permissions of that port using:
+
+$ sudo chmod 666 /dev/ttyACM0
+
+

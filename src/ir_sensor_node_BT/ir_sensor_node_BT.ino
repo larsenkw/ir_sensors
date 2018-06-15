@@ -77,6 +77,9 @@ ros::Publisher bt_commands("other_commands", &command);
 SoftwareSerial BTSerial(RX_PIN, TX_PIN);
 
 void setup(){
+  // rosserial baud rate = 57600
+  Serial.begin(57600);
+  
   // ROS Initialization
   nh.initNode();
   int16_array.data_length = 6; // length of array
