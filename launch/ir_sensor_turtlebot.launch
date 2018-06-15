@@ -1,23 +1,23 @@
 <launch>
   <!-- Name of the USB port the Arduino is connected to -->
-  <arg name='port' default='/dev/ttyACM0' />
+  <arg name="port" default="/dev/ttyACM0" />
 
   <!-- Start up Turtlebot -->
-  <include file='$(find turtlebot_bringup)/launch/minimal.launch' />
+  <include file="$(find turtlebot_bringup)/launch/minimal.launch" />
 
   <!-- Start IR Sensor nodes -->
   <!-- start Arduino node -->
-  <node pkg='rosserial_python' type='serial_node.py' name='serial_node' respawn='true'>
-    <param name='port' value='$(arg port)' />
+  <node pkg="rosserial_python" type="serial_node.py" name="serial_node" respawn="true">
+    <param name="port" value="$(arg port)" />
   </node>
 
   <!-- start IR data conversion node -->
   <node pkg='ir_sensors' type='ir_data_process.py' name='ir_data_process' />
 
-  <!-- start App control node -->
-  <node pkg='ir_sensors' type='app_read.py' name='app_read' output='screen'/>
-
   <!-- start velocity control node  -->
-  <node pkg='ir_sensors' type='ir_vel_control.py' name='ir_vel_control' />
+  <node pkg="ir_sensors" type="ir_vel_control.py" name="ir_vel_control" />
+
+  <!-- start velocity smoother node -->
+  <node pkg="ir_sensors" type="vel_smoother.py" name="vel_smoother" />
 
 </launch>

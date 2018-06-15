@@ -32,21 +32,9 @@ class Server(object):
         self.k_lin_forward = 0.8 # linear velocity proportion parameter (for forward motion)
         self.k_lin_reverse = 1.5 # linear velocity proportion parameter (for reverse motion)
         self.k_ang = (15.0/1.0) # angular velocity proportion parameter
-        # Velocity smoothing parameters (be sure to make these values floats by adding a decimal point)
-        self.frequency = 60. # Hz
-        self.max_accel_lin = 1. # m/s^2
-        self.max_accel_ang = 1. # rad/s^2
-        self.delta_v_lin = self.max_accel_lin/self.frequency # maximum change in velocity since previous command
-        self.delta_v_ang = self.max_accel_ang/self.frequency # maximum change in angular velocity
-        self.command_Twist.linear.x = 0.
-        self.command_Twist.angular.z = 0.
-        self.smoothed_Twist = Twist() # final Twist command sent to turtlebot after being smoothed
-        self.smoothed_Twist.linear.x = 0.
-        self.smoothed_Twist.angular.z = 0.
-        self.previous_Twist = Twist() # previously seen Twist command from last publish
-        self.previous_TWist = self.smoothed_Twist
-        # Create Publisher
-        self.pub_vel = rospy.Publisher('cmd_vel_mux/input/teleop', Twist, queue_size = 10) # for turtlebot simulation
+
+        # Velocity publisher
+        self.pub_vel = rospy.Publisher('ir_cmd_vel', Twist, queue_size=100)
 
     def callback_theta_p(self, msg):
         self.theta_p = msg.data
@@ -161,32 +149,9 @@ class Server(object):
             self.command_Twist.angular.z = 0
             self.correcting_distance = 0
         # Publish velocity command
-        #self.pub_vel.publish(self.command_Twist)
+        self.pub_vel.publish(self.command_Twist)
         print('Error: %d, Correcting: %d' % (self.d_error, self.correcting_distance))
         rospy.loginfo(self.command_Twist)
-
-    def callback_vel_smoother(self, msg):
-        # Linear Smoothing
-        self.previous_Twist.linear.x = msg.linear.x
-        if (self.command_Twist.linear.x >= self.previous_Twist.linear.x - self.delta_v_lin):
-            if (self.command_Twist.linear.x > self.previous_Twist.linear.x + self.delta_v_lin):
-                self.smoothed_Twist.linear.x = self.previous_Twist.linear.x + self.delta_v_lin
-            else:
-                self.smoothed_Twist.linear.x = self.command_Twist.linear.x
-        else:
-            self.smoothed_Twist.linear.x = self.previous_Twist.linear.x - self.delta_v_lin
-        # Angular Smoothing
-        self.previous_Twist.angular.z = msg.angular.z
-        if (self.command_Twist.angular.z >= self.previous_Twist.angular.z - self.delta_v_ang):
-            if (self.command_Twist.angular.z > self.previous_Twist.angular.z + self.delta_v_ang):
-                self.smoothed_Twist.angular.z = self.previous_Twist.angular.z + self.delta_v_ang
-            else:
-                self.smoothed_Twist.angular.z = self.command_Twist.angular.z
-        else:
-            self.smoothed_Twist.angular.z = self.previous_Twist.angular.z - self.delta_v_ang
-
-        #FIXME: Make sure this works as the previous controller
-        #self.smoothed_Twist = self.command_Twist
 
 
 def ir_vel_control(server):
@@ -196,20 +161,10 @@ def ir_vel_control(server):
     rospy.Subscriber('num_sensors', Int8, server.callback_num_sensors)
 
     # Read app commands to control robot
-    rospy.Subscriber('/following_status', Bool, server.callback_following_status)
-    rospy.Subscriber('/BT_connection_status', Bool, server.callback_BT_connection_status)
-    rospy.Subscriber('/other_commands', String, server.callback_other_commands)
-
-    # Velocity Smoothing
-    pub_vel = rospy.Publisher('cmd_vel_mux/input/teleop', Twist, queue_size=100)
-    rospy.Subscriber('cmd_vel_mux/input/teleop', Twist, server.callback_vel_smoother)
-    #rospy.spin()
-
-    rate = rospy.Rate(server.frequency)
-    while not rospy.is_shutdown():
-        pub_vel.publish(server.smoothed_Twist)
-        rate.sleep()
-
+    rospy.Subscriber('following_status', Bool, server.callback_following_status)
+    rospy.Subscriber('BT_connection_status', Bool, server.callback_BT_connection_status)
+    rospy.Subscriber('other_commands', String, server.callback_other_commands)
+    rospy.spin()
 
 server = Server()
 if __name__ == '__main__':
