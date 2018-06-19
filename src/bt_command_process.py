@@ -9,6 +9,7 @@ from __future__ import print_function
 import rospy
 from ir_sensors.msg import Command
 import csv
+import os
 
 def checkUsername(username):
     # #FIXME: send userfound message to confirm process workds
@@ -21,7 +22,8 @@ def checkUsername(username):
     command_response.name = "checkuser"
     command_response.value1 = "usernotfound"
     command_response.value2 = ""
-    database = open('./database.csv', 'rb')
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    database = open(dir_path + "/database.csv", "rb")
     database_reader = csv.reader(database, delimiter = ',')
     for row in database_reader:
         if (row[0] == username):
@@ -43,7 +45,8 @@ def checkPassword(username, password):
     command_response.name = "checkpassword"
     command_response.value1 = "incorrect"
     command_response.value2 = ""
-    database = open('./database.csv', 'rb')
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    database = open(dir_path + "/database.csv", "rb")
     database_reader = csv.reader(database, delimiter = ',')
     for row in database_reader:
         if (row[0] == username):

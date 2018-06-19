@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 import rospy
-from std_msgs.msg import Int16MultiArray, Float64, Int8
+from std_msgs.msg import Float64, Int8
+from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import PoseStamped
 from tf.transformations import quaternion_from_euler
 import rospkg
@@ -75,7 +76,7 @@ class IRSensors(object):
         self.times = np.array([])
         self.seq = 0
 
-    def rawDataToPose(self, data):
+    def rawDataToPose(self, data, LS_header):
         self.values = list(data)
         self.time_s = rospy.get_time()
         self.times = np.append(self.times[-self.store_len:], self.time_s)
@@ -83,17 +84,17 @@ class IRSensors(object):
             #--- Convert data to int
             self.values[i] = int(self.values[i])
             #--- Store analog value
-            self.values_analog[i] = np.append(self.values_analog[i], self.values[i])
+            self.values_analog[i] = np.append(self.values_analog[i][-self.store_len:], self.values[i])
             #--- Convert to distance (cm) and store
             self.distances[i] = self.analogToDistance(self.values[i])
-            self.values_cm[i] = np.append(self.values_cm[i], self.distances[i])
+            self.values_cm[i] = np.append(self.values_cm[i][-self.store_len:], self.distances[i])
             #--- Calculate average over window
             self.values_avg[i] = np.mean(self.values_analog[i][-self.window_len:])
-            self.distances_avg[i] = self.analogToDistance(self.values_avg[i])
-            self.valuesavg_cm[i] = np.append(self.valuesavg_cm[i], self.distances_avg[i])
+            self.distances_avg[i] = np.mean(self.values_cm[i][-self.window_len:])
+            self.valuesavg_cm[i] = np.append(self.valuesavg_cm[i][-self.store_len:], self.distances_avg[i])
 
         #--- Caluclate angle and average distance
-        self.theta_p, self.avg_distance, self.num_sensors, self.rotation_direction, self.pose = self.calcPose(self.distances_avg)
+        self.theta_p, self.avg_distance, self.num_sensors, self.rotation_direction, self.pose = self.calcPose(self.distances_avg, LS_header)
         return self.theta_p, self.avg_distance, self.num_sensors, self.rotation_direction, self.pose
 
     def analogToDistance(self, analog):
@@ -109,7 +110,11 @@ class IRSensors(object):
         distance = (1./inv_cm)
         return distance
 
-    def calcPose(self, distances):
+    def calcPose(self, distances, LS_header):
+        # For the header values of the PoseStamped message, the time stamp will
+        # be taken from the header sent from the LaserScan message from the
+        # Arduino (LS_header)
+
         # Determine which sensors are maxed out
         maxed_out = []
         rows_to_delete = [] # indices for rows to delete from data to find linear fit
@@ -171,16 +176,10 @@ class IRSensors(object):
         pose = PoseStamped()
         pose.header.seq = self.seq
         self.seq += 1
-        pose.header.stamp = rospy.Time.now()
+        pose.header.stamp = LS_header.stamp
         pose.header.frame_id = 'IR_Pose'
         pose.pose.position.z = avg_distance/100. # convert [cm] to [m]
         pose.pose.position.x = np.mean(x)/100. # conert [cm] to [m]
-
-        #FIXME: Quaternion Test, make sure you are assigning the right values
-        #theta_p = 0.7
-        #quat = quaternion_from_euler(0, theta_p, 0)
-        #rospy.loginfo(quat)
-
         k = [0, 1, 0] # axis of rotation, Y-axis
         # Quaternion scalar value
         q0 = np.cos(theta_p/2.0)
@@ -205,10 +204,11 @@ pub_num_sensors = rospy.Publisher('num_sensors', Int8, queue_size = 10)
 pub_rotation_dir = rospy.Publisher('rotation_direction', Int8, queue_size = 10)
 pub_ir_pose = rospy.Publisher('IR_pose', PoseStamped, queue_size = 10)
 
-def callback(data, ir_sensors):
+def callback(msg, ir_sensors):
     # Receive raw data and publish a value
-    raw_data = data.data
-    theta_p, distance, num_sensors, rotation_direction, pose = ir_sensors.rawDataToPose(raw_data)
+    # The raw_data variable should be an array of numbers
+    raw_data = msg.ranges
+    theta_p, distance, num_sensors, rotation_direction, pose = ir_sensors.rawDataToPose(raw_data, msg.header)
     rospy.loginfo('Angle: {:.0f}, Distance: {:.2f}, Num Sensors: {:d}, Rot Dir: {:d}'.format(theta_p, distance, num_sensors, rotation_direction))
     rospy.loginfo(pose)
     pub_human_angle.publish(Float64(theta_p))
@@ -219,7 +219,7 @@ def callback(data, ir_sensors):
 
 def ir_data_process(ir_sensors):
     rospy.init_node('ir_data_process')#, anonymous=True)
-    rospy.Subscriber('ir_raw_data', Int16MultiArray, callback, ir_sensors)
+    rospy.Subscriber('ir_raw_data', LaserScan, callback, ir_sensors)
     rospy.spin()
 
 if __name__ == '__main__':
