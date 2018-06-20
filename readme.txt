@@ -77,3 +77,4 @@ int16_t data[6];
 [array_name] = data;
 
 Record your values and assign them to the elements in 'data' and then assign [array_name] to 'data' and then publish the message.
+Also Assigning the length must be done within the 'setup()' function and not before.

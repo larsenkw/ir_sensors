@@ -27,7 +27,8 @@
  * 
  * ---Topics---
  * Publishing: /ir_raw_data
- * Message type: sensor_msgs/LaserScan
+ * Message type: ir_sensors/IRDataStamped.h
+ * (use the other code with LaserScan message, this one is only for testing)
  * 
  * Publishing: /following_status
  * Message type: std_msgs/Bool (0 = stopped, 1 = following)

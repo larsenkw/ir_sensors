@@ -3,7 +3,7 @@
 # Reads messages from:
 #   'IR_pose'
 #   'following_status'
-#   'BT_connection_status'
+#   'bt_connection_status'
 # And then determines the velocity commands to give to the Turtlebot
 
 import rospy
@@ -88,7 +88,7 @@ class Server(object):
         self.following.data = msg.data
         self.followCommand()
 
-    def callback_BT_connection_status(self, msg):
+    def callback_bt_connection_status(self, msg):
         self.connection.data = msg.data
         self.followCommand()
 
@@ -162,7 +162,7 @@ def ir_vel_control(server):
 
     # Read app commands to control robot
     rospy.Subscriber('following_status', Bool, server.callback_following_status)
-    rospy.Subscriber('BT_connection_status', Bool, server.callback_BT_connection_status)
+    rospy.Subscriber('bt_connection_status', Bool, server.callback_bt_connection_status)
     rospy.Subscriber('other_commands', String, server.callback_other_commands)
     rospy.spin()
 

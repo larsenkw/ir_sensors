@@ -66,10 +66,11 @@ const int RX_PIN = 10;
 const int TX_PIN = 11;
 const int BT_CONNECTION_PIN = 4; // For checking connection status of the BT board
 
+// Number of sensors read by this arduino
 const int num_sensors = 6;
 
 // Other parameters
-//float data[6];
+float data[num_sensors];
 
 // ROS Objects
 ros::NodeHandle nh;
@@ -100,6 +101,11 @@ void setup(){
   pinMode(BT_CONNECTION_PIN, INPUT);
   following.data = false;
   connection.data = false;
+
+  // Declare size for array in ir_scan
+  ir_scan.ranges_length = num_sensors;
+  // Assign array pointer in message to existing array
+  ir_scan.ranges = data;
 
 //  Serial.println(sizeof(nh));
 //  Serial.println(sizeof(ir_scan));
