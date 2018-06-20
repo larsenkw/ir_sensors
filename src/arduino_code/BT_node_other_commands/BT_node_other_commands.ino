@@ -35,8 +35,12 @@
 
 
 // Pins
-const int RX_PIN = 2; // Arduino RX pin, Bluetooth TX Pin
-const int TX_PIN = 3; // Arduino TX pin, Bluetooth RX Pin, this pin should be connected through a Voltage Divider to output 3.3V
+// Arduino UNO
+//const int RX_PIN = 2; // Arduino RX pin, Bluetooth TX Pin
+//const int TX_PIN = 3; // Arduino TX pin, Bluetooth RX Pin, this pin should be connected through a Voltage Divider to output 3.3V
+// Arduino MEGA (pin 2 does not support change interrupts)
+const int RX_PIN = 10;
+const int TX_PIN = 11;
 const int BT_CONNECTION_PIN = 4; // For checking connection status of the BT board
 
 // Bluetooth Objects
@@ -65,10 +69,6 @@ void callback_command_response(const ir_sensors::Command &command_response) {
     BTSerial.print("\n");
     BTSerial.print(command_response.value2); // displayname of user (if password is correct, blank otherwise)
     BTSerial.print("\n");
-    digitalWrite(13, HIGH);
-    delay(250);
-    digitalWrite(13, LOW);
-    delay(250);
   }
 }
 ros::Subscriber<ir_sensors::Command> bt_command_response("bt_command_response", &callback_command_response);
@@ -85,11 +85,18 @@ void setup(){
   // Bluetooth Initialization
   BTSerial.begin(38400);
   Serial.begin(57600);
+  //Serial1.begin(57600);
   pinMode(BT_CONNECTION_PIN, INPUT);
   following.data = false;
   connection.data = false;
-
+  
   pinMode(13, OUTPUT);
+
+  Serial.println(sizeof(nh));
+  Serial.println(sizeof(time));
+  Serial.println(sizeof(following));
+  Serial.println(sizeof(connection));
+  Serial.println(sizeof(command));
 }
 
 void loop(){
@@ -100,6 +107,7 @@ void loop(){
     c = BTSerial.read();
     //c_string = BTSerial.read();
     //Serial.write(BTSerial.read());
+    Serial.print(c);
     if (c == '0') {
       stopSignal();
     }
@@ -131,7 +139,6 @@ void stopSignal() {
 void followSignal() {
   following.data = true;
   bt_following.publish(&following);
-  
 }
 // Command 2
 void checkoutCommand() {

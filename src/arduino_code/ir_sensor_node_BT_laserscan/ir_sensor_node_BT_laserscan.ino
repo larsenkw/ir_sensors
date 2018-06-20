@@ -4,17 +4,6 @@
  * This file now includes code for operating the HC-05 Bluetooth board with 
  * the Arduino for interfacing with an Android phone app.
  *
- * When making changes, check with: http://wiki.ros.org/rosserial/Overview/Limitations
- * to make sure you are not getting problems from these limitations.
- * Note how arrays are handled in messages. Each array within a message will have an 
- * additional parameter 'int [array_name]_length' which you must assign within the 
- * 'setup()' function of the Arduino code and then you must have an existing array
- * of the correct size to which you assign the array.
- * e.g.
- * int16_t data[6];
- * [array_name]_length = 6;
- * [array_name] = data;
- *
  * To run this code with ROS
  * 1) you must have ROS running with 'roscore'
  * 2) open a serial node with the command:
@@ -42,7 +31,7 @@
 // ROS Includes
 //#include <ArduinoHardware.h>
 #include <ros.h>
-#include <ir_sensors/IRDataStamped.h>
+#include <sensor_msgs/LaserScan.h>
 #include <std_msgs/Time.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/String.h>
@@ -51,14 +40,13 @@
 
 
 // Pins
-const int num_sensors = 6;
 const int SENSOR1 = A0;
 const int SENSOR2 = A1;
 const int SENSOR3 = A2;
 const int SENSOR4 = A3;
 const int SENSOR5 = A4;
 const int SENSOR6 = A5;
-const int IR_SENSORS[num_sensors] = {SENSOR1, SENSOR2, SENSOR3, SENSOR4, SENSOR5, SENSOR6};
+const int IR_SENSORS[6] = {SENSOR1, SENSOR2, SENSOR3, SENSOR4, SENSOR5, SENSOR6};
 // Arduino UNO
 //const int RX_PIN = 2; // Arduino RX pin, Bluetooth TX Pin
 //const int TX_PIN = 3; // Arduino TX pin, Bluetooth RX Pin, this pin should be connected through a Voltage Divider to output 3.3V
@@ -67,13 +55,14 @@ const int RX_PIN = 10;
 const int TX_PIN = 11;
 const int BT_CONNECTION_PIN = 4; // For checking connection status of the BT board
 
+const int num_sensors = 6;
 
 // Other parameters
-int16_t data[6];
+//float data[6];
 
 // ROS Objects
 ros::NodeHandle nh;
-ir_sensors::IRDataStamped ir_scan;
+sensor_msgs::LaserScan ir_scan;
 ros::Publisher ir_raw_data("ir_raw_data", &ir_scan);
 std_msgs::Bool following;
 ros::Publisher bt_following("following_status", &following);
@@ -101,22 +90,17 @@ void setup(){
   following.data = false;
   connection.data = false;
 
-  Serial.println(sizeof(nh));
-  Serial.println(sizeof(ir_scan));
-  Serial.println(sizeof(following));
-  Serial.println(sizeof(connection));
-  Serial.println(sizeof(command));
-
-  // Declare size for array in ir_scan
-  ir_scan.data_length = num_sensors;
-  // Assign array pointer in message to existing array
-  ir_scan.data = data;
+//  Serial.println(sizeof(nh));
+//  Serial.println(sizeof(ir_scan));
+//  Serial.println(sizeof(following));
+//  Serial.println(sizeof(connection));
+//  Serial.println(sizeof(command));
 }
 
 void loop(){
   // Gather Data
   for (int i = 0; i < num_sensors; ++i){
-    ir_scan.data[i] = analogRead(IR_SENSORS[i]);
+    ir_scan.ranges[i] = analogRead(IR_SENSORS[i]);
   }
   
   // Write and send message
