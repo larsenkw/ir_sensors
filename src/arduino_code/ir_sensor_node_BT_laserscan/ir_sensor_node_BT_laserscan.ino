@@ -4,6 +4,17 @@
  * This file now includes code for operating the HC-05 Bluetooth board with 
  * the Arduino for interfacing with an Android phone app.
  *
+ * When making changes, check with: http://wiki.ros.org/rosserial/Overview/Limitations
+ * to make sure you are not getting problems from these limitations.
+ * Note how arrays are handled in messages. Each array within a message will have an 
+ * additional parameter 'int [array_name]_length' which you must assign within the 
+ * 'setup()' function of the Arduino code and then you must have an existing array
+ * of the correct size to which you assign the array.
+ * e.g.
+ * int16_t data[6];
+ * [array_name]_length = 6;
+ * [array_name] = data;
+ * 
  * To run this code with ROS
  * 1) you must have ROS running with 'roscore'
  * 2) open a serial node with the command:
