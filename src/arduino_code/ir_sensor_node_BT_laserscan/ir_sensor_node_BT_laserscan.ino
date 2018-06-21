@@ -50,14 +50,26 @@
 #include <SoftwareSerial.h>
 
 
+// Number of sensors read by this arduino
+const int num_sensors = 15;
 // Pins
-const int SENSOR1 = A0;
-const int SENSOR2 = A1;
-const int SENSOR3 = A2;
-const int SENSOR4 = A3;
-const int SENSOR5 = A4;
-const int SENSOR6 = A5;
-const int IR_SENSORS[6] = {SENSOR1, SENSOR2, SENSOR3, SENSOR4, SENSOR5, SENSOR6};
+const int SENSOR1 = A0; // front1
+const int SENSOR2 = A1; // front2
+const int SENSOR3 = A2; // front3
+const int SENSOR4 = A3; // front4
+const int SENSOR5 = A4; // front5
+const int SENSOR6 = A5; // front6
+const int SENSOR7 = A6; // front left corner
+const int SENSOR8 = A7; // left side
+const int SENSOR9 = A8; // back left corner
+const int SENSOR10 = A9; // back1
+const int SENSOR11 = A10; // back2
+const int SENSOR12 = A11; // back3
+const int SENSOR13 = A12; // back right corner
+const int SENSOR14 = A13; // right side
+const int SENSOR15 = A14; // front right corner
+const int IR_SENSORS[num_sensors] = {SENSOR1, SENSOR2, SENSOR3, SENSOR4, SENSOR5, SENSOR6, SENSOR7, SENSOR8, SENSOR9, SENSOR10, SENSOR11, SENSOR12, SENSOR13, SENSOR14, SENSOR15};
+const int VOLTAGE_READ = A15; // check the maximum power voltage currently available
 // Arduino UNO
 //const int RX_PIN = 2; // Arduino RX pin, Bluetooth TX Pin
 //const int TX_PIN = 3; // Arduino TX pin, Bluetooth RX Pin, this pin should be connected through a Voltage Divider to output 3.3V
@@ -65,9 +77,6 @@ const int IR_SENSORS[6] = {SENSOR1, SENSOR2, SENSOR3, SENSOR4, SENSOR5, SENSOR6}
 const int RX_PIN = 10;
 const int TX_PIN = 11;
 const int BT_CONNECTION_PIN = 4; // For checking connection status of the BT board
-
-// Number of sensors read by this arduino
-const int num_sensors = 6;
 
 // Other parameters
 float data[num_sensors];
@@ -117,7 +126,9 @@ void setup(){
 void loop(){
   // Gather Data
   for (int i = 0; i < num_sensors; ++i){
-    ir_scan.ranges[i] = analogRead(IR_SENSORS[i]);
+    float max_reading = 1023.0;
+    float scaling_factor = max_reading/float(analogRead(VOLTAGE_READ));
+    ir_scan.ranges[i] = analogRead(IR_SENSORS[i])*scaling_factor;
   }
   
   // Write and send message
