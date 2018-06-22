@@ -32,13 +32,16 @@ import pandas as pd
 # -x3  -x2  -x1 0 x1   x2   x3
 #
 #--- Full Layout ---#
+# plain numbers refer to obstacle zones
+#                    Front
 #
-#      S6   S5   S4   S3   S2   S1
-#  S7 _____________________________ S15
-#     |                           |
-#  S8 |                           | S14
-#     |___________________________|
-#  S9        S10   S11   S12        S13
+#   1     S6   S5   S4   S3   S2   S1      7
+#     S7 _____________________________ S15
+#        |                           |
+#   2 S8 |                           | S14 6
+#        |___________________________|
+#     S9        S10   S11   S12        S13
+#   3                  4                   5
 
 #===============================================================================
 # Object for performing calculations
@@ -48,13 +51,8 @@ class IRSensors(object):
         # Length of averaging window (how many past points to average)
         self.window_len = window_len
         self.store_len = 2*window_len # how many values to store in numpy arrays
-        # Distance range provided by the manufacturer of teh IR sensors
-        self.range_min = 0.20 # m
-        self.range_max = 1.50 # m
-        # Desired threshold for avoiding noisy data at the IR reading limit
-        self.threshold_max = 1.40 # m
-        # Minimum distance to be considered obstacles
-        self.obstacle_distance_min = 0.30 # m
+        self.max_distance = 140 # cm
+        self.obstacle_distance_min = 30 # cm
 
         # Create linear interpolation function from inverse distance plot found in the
         # data sheet for GP2Y0A41SK0F (the .csv files is saved as '4-30cm Inverse Plot
@@ -71,8 +69,6 @@ class IRSensors(object):
         except:
             rospy.logerr('Failed to read file: '+filename)
             rospy.logerr('Make sure it is in the ' + rospack.get_path('ir_sensors') + '/src/ ' + ' folder')
-            rospy.signal_shutdown("Node cannot run without the file: " + filename)
-            quit()
         # Remove the last 3 data points, these contain values outside the linear region
         # with d < 4cm
         self.y =self.df.values[0:-3,0] # inverse cm data
@@ -84,33 +80,19 @@ class IRSensors(object):
 
         # Initialize values and arrays for storing past values
         self.iter_val = 0
+        self.values_analog = [np.array([]),np.array([]),np.array([]),np.array([]),np.array([]),np.array([])]
+        self.distances = [0, 0, 0 ,0 ,0 ,0]
+        self.values_cm = [np.array([]),np.array([]),np.array([]),np.array([]),np.array([]),np.array([])]
+        self.values_avg = [0, 0, 0, 0, 0, 0]
+        self.distances_avg = [0, 0, 0, 0, 0, 0]
+        self.valuesavg_cm = [np.array([]),np.array([]),np.array([]),np.array([]),np.array([]),np.array([])]
+        self.times = np.array([])
         self.seq = 0
 
-        self.num_sensors = 15
-        self.values_analog = [np.array([])]
-        self.distances = [0]
-        self.values_m = [np.array([])]
-        self.values_avg = [0]
-        self.distances_avg = [0]
-        self.valuesavg_m = [np.array([])]
-        for i in range(self.num_sensors-1):
-            self.values_analog.append(np.array([]))
-            self.distances.append(0)
-            self.values_m.append(np.array([]))
-            self.values_avg.append(0)
-            self.distances_avg.append(0)
-            self.valuesavg_m.append(np.array([]))
-
-        # # FIXME: Test setting param
-        # obstacles = [0,0,0,0,0,0,0]
-        # obstacle_distances = [.30,.10,.50,.50,.50,.50,.50]
-        # for i in range(len(obstacle_distances)):
-        #     if obstacle_distances[i] < self.obstacle_distance_min:
-        #         obstacles[i] = 1
-        # rospy.set_param('obstacles', obstacles)
-
-    def rawDataToDistance(self, data):
+    def rawDataToPose(self, data, LS_header):
         self.values = list(data)
+        self.time_s = rospy.get_time()
+        self.times = np.append(self.times[-self.store_len:], self.time_s)
         for i in range(len(self.values)):
             #--- Convert data to int
             self.values[i] = int(self.values[i])
@@ -118,17 +100,17 @@ class IRSensors(object):
             self.values_analog[i] = np.append(self.values_analog[i][-self.store_len:], self.values[i])
             #--- Convert to distance (cm) and store
             self.distances[i] = self.analogToDistance(self.values[i])
-            self.values_m[i] = np.append(self.values_m[i][-self.store_len:], self.distances[i])
+            self.values_cm[i] = np.append(self.values_cm[i][-self.store_len:], self.distances[i])
             #--- Calculate average over window
             self.values_avg[i] = np.mean(self.values_analog[i][-self.window_len:])
-            self.distances_avg[i] = np.mean(self.values_m[i][-self.window_len:])
-            self.valuesavg_m[i] = np.append(self.valuesavg_m[i][-self.store_len:], self.distances_avg[i])
-        return self.distances_avg
+            self.distances_avg[i] = np.mean(self.values_cm[i][-self.window_len:])
+            self.valuesavg_cm[i] = np.append(self.valuesavg_cm[i][-self.store_len:], self.distances_avg[i])
 
-    def distanceToPose(self, data_avg, header):
-        #--- Caluclate angle from average distance
-        self.theta_p, self.avg_distance, self.num_sensors, self.rotation_direction, self.pose = self.calcPose(data_avg, header)
-        return self.theta_p, self.avg_distance, self.num_sensors, self.rotation_direction, self.pose
+        #--- Caluclate angle and average distance
+        self.front_distances_avg = self.distances_avg[0:6]
+        self.obstacle_distances_avg = self.distances_avg[6:]
+        self.theta_p, self.avg_distance, self.num_sensors, self.rotation_direction, self.pose = self.calcPose(self.front_distances_avg, LS_header)
+        return self.theta_p, self.avg_distance, self.num_sensors, self.rotation_direction, self.pose, self.obstacle_distances_avg
 
     def analogToDistance(self, analog):
         # Convert analog reading to Voltage
@@ -139,12 +121,11 @@ class IRSensors(object):
         # this causes the distance to max at ~300cm
         if (inv_cm < 0.003):
             inv_cm = 0.003
-        # Convert inverse distance to distance [cm]
+        # Convert inverse distance to distance
         distance = (1./inv_cm)
-        distance = distance/100. # convert [cm] to [m]
         return distance
 
-    def calcPose(self, distances, header):
+    def calcPose(self, distances, LS_header):
         # For the header values of the PoseStamped message, the time stamp will
         # be taken from the header sent from the LaserScan message from the
         # Arduino (LS_header)
@@ -153,7 +134,7 @@ class IRSensors(object):
         maxed_out = []
         rows_to_delete = [] # indices for rows to delete from data to find linear fit
         for i in range(len(distances)):
-            if (distances[i] >= self.threshold_max):
+            if (distances[i] > self.max_distance):
                 maxed_out.append(1)
                 rows_to_delete.append(i)
             else:
@@ -201,7 +182,7 @@ class IRSensors(object):
                 rotation_direction = 0
         else:
             theta_p = 0
-            avg_distance = self.threshold_max
+            avg_distance = 150
             num_sensors = 0
             rotation_direction = 0
             x = 0
@@ -210,10 +191,10 @@ class IRSensors(object):
         pose = PoseStamped()
         pose.header.seq = self.seq
         self.seq += 1
-        pose.header.stamp = header.stamp
+        pose.header.stamp = LS_header.stamp
         pose.header.frame_id = 'IR_Pose'
-        pose.pose.position.z = avg_distance
-        pose.pose.position.x = np.mean(x)
+        pose.pose.position.z = avg_distance/100. # convert [cm] to [m]
+        pose.pose.position.x = np.mean(x)/100. # conert [cm] to [m]
         k = [0, 1, 0] # axis of rotation, Y-axis
         # Quaternion scalar value
         q0 = np.cos(theta_p/2.0)
@@ -237,32 +218,29 @@ pub_distance = rospy.Publisher('ir_distance', Float64, queue_size = 10)
 pub_num_sensors = rospy.Publisher('num_sensors', Int8, queue_size = 10)
 pub_rotation_dir = rospy.Publisher('rotation_direction', Int8, queue_size = 10)
 pub_ir_pose = rospy.Publisher('IR_pose', PoseStamped, queue_size = 10)
-pub_ir_other_sensors_distance = rospy.Publisher('ir_other_sensors_distance', LaserScan, queue_size = 10)
 
 def callback(msg, ir_sensors):
     # Receive raw data and publish a value
     # The raw_data variable should be an array of numbers
     raw_data = msg.ranges
-    distances_avg = ir_sensors.rawDataToDistance(raw_data)
-    front_distances = distances_avg[0:6]
-    obstacle_distances = distances_avg[6:]
-    theta_p, distance, num_sensors, rotation_direction, pose = ir_sensors.distanceToPose(front_distances, msg.header) # only take first 6 distances, those rorrespond to the front sensors
+    print raw_data
+    theta_p, distance, num_sensors, rotation_direction, pose, obstacle_distances = ir_sensors.rawDataToPose(raw_data, msg.header)
     rospy.loginfo('Angle: {:.0f}, Distance: {:.2f}, Num Sensors: {:d}, Rot Dir: {:d}'.format(theta_p, distance, num_sensors, rotation_direction))
     rospy.loginfo(pose)
     pub_human_angle.publish(Float64(theta_p))
     pub_distance.publish(Float64(distance))
     pub_num_sensors.publish(Int8(num_sensors))
     pub_rotation_dir.publish(Int8(rotation_direction))
+    # Publish the pose
     pub_ir_pose.publish(pose)
-    other_sensors = LaserScan()
-    other_sensors.header = msg.header
-    other_sensors.ranges = obstacle_distances
-    pub_ir_other_sensors_distance.publish(other_sensors)
+    # Determine Obstacles and set parameters list for each zones
+    # 0 = no obstacle, 1 = obstacle sensed
     obstacles = [0,0,0,0,0,0,0]
     for i in range(len(obstacle_distances)):
         if obstacle_distances[i] < ir_sensors.obstacle_distance_min:
             obstacles[i] = 1
-    rospy.set_param('obstacles', obstacles)
+    rospy.set_param_raw('obstacles', obstacles)
+
 
 def ir_data_process(ir_sensors):
     rospy.init_node('ir_data_process')#, anonymous=True)

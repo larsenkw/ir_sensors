@@ -71,8 +71,6 @@ class IRSensors(object):
         except:
             rospy.logerr('Failed to read file: '+filename)
             rospy.logerr('Make sure it is in the ' + rospack.get_path('ir_sensors') + '/src/ ' + ' folder')
-            rospy.signal_shutdown("Node cannot run without the file: " + filename)
-            quit()
         # Remove the last 3 data points, these contain values outside the linear region
         # with d < 4cm
         self.y =self.df.values[0:-3,0] # inverse cm data
@@ -100,14 +98,6 @@ class IRSensors(object):
             self.values_avg.append(0)
             self.distances_avg.append(0)
             self.valuesavg_m.append(np.array([]))
-
-        # # FIXME: Test setting param
-        # obstacles = [0,0,0,0,0,0,0]
-        # obstacle_distances = [.30,.10,.50,.50,.50,.50,.50]
-        # for i in range(len(obstacle_distances)):
-        #     if obstacle_distances[i] < self.obstacle_distance_min:
-        #         obstacles[i] = 1
-        # rospy.set_param('obstacles', obstacles)
 
     def rawDataToDistance(self, data):
         self.values = list(data)
@@ -262,7 +252,7 @@ def callback(msg, ir_sensors):
     for i in range(len(obstacle_distances)):
         if obstacle_distances[i] < ir_sensors.obstacle_distance_min:
             obstacles[i] = 1
-    rospy.set_param('obstacles', obstacles)
+    rospy.set_param_raw('obstacles', obstacles)
 
 def ir_data_process(ir_sensors):
     rospy.init_node('ir_data_process')#, anonymous=True)
