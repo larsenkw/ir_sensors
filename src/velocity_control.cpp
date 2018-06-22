@@ -1,6 +1,6 @@
 #include "ros/ros.h"
 #include "geometry_msgs/PoseStamped.h"
-#include "geometry_msgs/Twist.h"
+#include "geometry_msgs/TwistStamped.h"
 #include "std_msgs/Bool.h"
 #include "std_msgs/String.h"
 #include "std_msgs/Int8.h"
@@ -27,7 +27,7 @@ private:
     std_msgs::Bool connection; // indicates whether bluetooth is connected
     std_msgs::String command; // command name
     geometry_msgs::PoseStamped pose; // the human's pose w.r.t. IR sensors
-    geometry_msgs::Twist velocity; // robot velocity command
+    geometry_msgs::TwistStamped velocity; // robot velocity command
     // Method selection variables
     bool using_ir;
     bool using_camera;
@@ -52,7 +52,8 @@ public:
     Server()
     {
         // Grab incoming pose from logic function
-        sub_combined_pose = nh.subscribe<geometry_msgs::PoseStamped>("combined_pose", 10, &Server::poseCallback, this);
+        //sub_combined_pose = nh.subscribe<geometry_msgs::PoseStamped>("combined_pose", 10, &Server::poseCallback, this);
+        sub_combined_pose = nh.subscribe<geometry_msgs::PoseStamped>("IR_pose", 10, &Server::poseCallback, this);
         // Receive following status
         sub_following_status = nh.subscribe<std_msgs::Bool>("following_status", 10, &Server::followingCallback, this);
         // Receive connection status
@@ -62,7 +63,7 @@ public:
         // Receives the number of sensors not maxed out
         sub_num_sensors = nh.subscribe<std_msgs::Int8>("num_sensors", 10, &Server::numSensorsCallback, this);
         // Publishes final velocity command to velocity smoother
-        pub_velocity_command = nh.advertise<geometry_msgs::Twist>("vel_cmd_obstacle", 10);
+        pub_velocity_command = nh.advertise<geometry_msgs::TwistStamped>("vel_cmd_obstacle", 10);
 
         following.data = false;
         connection.data = false;
@@ -125,10 +126,10 @@ public:
             velocityCommand();
         }
         else {
-            velocity.linear.x = 0;
-            velocity.angular.z = 0;
+            velocity.twist.linear.x = 0;
+            velocity.twist.angular.z = 0;
             pub_velocity_command.publish(velocity);
-            ROS_INFO("Linear velocity: %f, Angular velocity: %f", velocity.linear.x, velocity.angular.z);
+            ROS_INFO("Stopped, lin.x: %f, ang.z: %f", velocity.twist.linear.x, velocity.twist.angular.z);
         }
     }
 
@@ -154,21 +155,21 @@ public:
             if (correcting_direction == 1){
                 // Currently moving forward
                 if (d_error <= 0){
-                    velocity.linear.x = 0.0;
+                    velocity.twist.linear.x = 0.0;
                     correcting_direction = 0;
                 }
                 else {
-                    velocity.linear.x = k_lin_forward*d_error;
+                    velocity.twist.linear.x = k_lin_forward*d_error;
                 }
             }
             else if (correcting_direction == -1){
                 // Currently movingn backward
                 if (d_error >= 0){
-                    velocity.linear.x = 0.0;
+                    velocity.twist.linear.x = 0.0;
                     correcting_direction = 0;
                 }
                 else {
-                    velocity.linear.x = k_lin_reverse*d_error;
+                    velocity.twist.linear.x = k_lin_reverse*d_error;
                 }
             }
         }
@@ -176,18 +177,18 @@ public:
         //----- Angular Velocity -----//
         // Angular velocity is proportional to the number of sensors that are maxed out
         if (pose.pose.position.x == 0){
-            velocity.angular.z = 0;
+            velocity.twist.angular.z = 0;
         }
         else {
-            velocity.angular.z = k_ang*atan2(pose.pose.position.y,pose.pose.position.x);
+            velocity.twist.angular.z = k_ang*atan2(pose.pose.position.y,pose.pose.position.x);
         }
 
         // If distance is out of range, STOP
         if (using_ir){
             // IR Check, sees if the number of sensors maxed out is 6
             if (num_sensors == 0){
-                velocity.linear.x = 0;
-                velocity.angular.z = 0;
+                velocity.twist.linear.x = 0;
+                velocity.twist.angular.z = 0;
                 correcting_direction = 0;
             }
         }
@@ -196,74 +197,78 @@ public:
         }
 
         // Send velocity to obstacle checker
-        obstacleCheck(velocity);
+        obstacleCheck();
     }
 
     // Take calculated velocity and check for obstacles, then publish command
-    void obstacleCheck(geometry_msgs::Twist &msg)
+    void obstacleCheck()
     {
         // Get obstacle param
         std::vector<int> obstacles;
         nh.getParam("obstacles", obstacles);
 
+        /*
         // Check locations of obstacles, if present block motion in that direction
         // Turning left is position, right is negative (right-hand rule)
         // 1: Front Left, block forward motion and left turning
         if (obstacles[0] == 1){
-            if (velocity.linear.x > 0){
-                velocity.linear.x = 0;
+            if (velocity.twist.linear.x > 0){
+                velocity.twist.linear.x = 0;
             }
-            if (velocity.angular.z > 0){
-                velocity.angular.z = 0;
+            if (velocity.twist.angular.z > 0){
+                velocity.twist.angular.z = 0;
             }
         }
         // 2: Left, block left turning
         if (obstacles[1] == 1){
-            if (velocity.angular.z > 0){
-                velocity.angular.z = 0;
+            if (velocity.twist.angular.z > 0){
+                velocity.twist.angular.z = 0;
             }
         }
         // 3: Back Left, block backward motion and left turning
         if (obstacles[2] == 1){
-            if (velocity.linear.x < 0){
-                velocity.linear.x = 0;
+            if (velocity.twist.linear.x < 0){
+                velocity.twist.linear.x = 0;
             }
-            if (velocity.angular.z > 0){
-                velocity.angular.z = 0;
+            if (velocity.twist.angular.z > 0){
+                velocity.twist.angular.z = 0;
             }
         }
         // 4: Back, block backward motion
         if (obstacles[3] == 1){
-            if (velocity.linear.x < 0){
-                velocity.linear.x = 0;
+            if (velocity.twist.linear.x < 0){
+                velocity.twist.linear.x = 0;
             }
         }
         // 5: Back Right, block backward motion and right turning
         if (obstacles[4] == 1){
-            if (velocity.linear.x < 0){
-                velocity.linear.x = 0;
+            if (velocity.twist.linear.x < 0){
+                velocity.twist.linear.x = 0;
             }
-            if (velocity.angular.z < 0){
-                velocity.angular.z = 0;
+            if (velocity.twist.angular.z < 0){
+                velocity.twist.angular.z = 0;
             }
         }
         // 6: Right, block right turning
         if (obstacles[5] == 1){
-            if (velocity.angular.z < 0){
-                velocity.angular.z = 0;
+            if (velocity.twist.angular.z < 0){
+                velocity.twist.angular.z = 0;
             }
         }
         // 7: Front Right, block forward motion and right turning
         if (obstacles[6] == 1){
-            if (velocity.linear.x > 0){
-                velocity.linear.x = 0;
+            if (velocity.twist.linear.x > 0){
+                velocity.twist.linear.x = 0;
             }
-            if (velocity.angular.z < 0){
-                velocity.angular.z = 0;
+            if (velocity.twist.angular.z < 0){
+                velocity.twist.angular.z = 0;
             }
         }
+        */
+
         // Publish new velocity command to velocity smoother topic
         pub_velocity_command.publish(velocity);
+        ROS_INFO("Following, lin.x: %f, ang.z: %f", velocity.twist.linear.x, velocity.twist.angular.z);
     }
 };
 
