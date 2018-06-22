@@ -101,13 +101,13 @@ class IRSensors(object):
             self.distances_avg.append(0)
             self.valuesavg_m.append(np.array([]))
 
-        # # FIXME: Test setting param
-        # obstacles = [0,0,0,0,0,0,0]
-        # obstacle_distances = [.30,.10,.50,.50,.50,.50,.50]
-        # for i in range(len(obstacle_distances)):
-        #     if obstacle_distances[i] < self.obstacle_distance_min:
-        #         obstacles[i] = 1
-        # rospy.set_param('obstacles', obstacles)
+        # FIXME: Test setting param
+        obstacles = [0,0,0,0,0,0,0]
+        obstacle_distances = [.30,.10,.50,.50,.50,.50,.50]
+        for i in range(len(obstacle_distances)):
+            if obstacle_distances[i] < self.obstacle_distance_min:
+                obstacles[i] = 1
+        rospy.set_param('obstacles', obstacles)
 
     def rawDataToDistance(self, data):
         self.values = list(data)
@@ -259,9 +259,18 @@ def callback(msg, ir_sensors):
     other_sensors.ranges = obstacle_distances
     pub_ir_other_sensors_distance.publish(other_sensors)
     obstacles = [0,0,0,0,0,0,0]
-    for i in range(len(obstacle_distances)):
-        if obstacle_distances[i] < ir_sensors.obstacle_distance_min:
+    # Side IRs
+    for i in range(0,3):
+        if (obstacle_distances[i] < ir_sensors.obstacle_distance_min):
             obstacles[i] = 1
+    # Back IRs
+    for i in range(3,6):
+        if (obstacle_distances[i] < ir_sensors.obstacle_distance_min):
+            obstacles[3] = 1
+    # Right IRs
+    for i in range(6,9):
+        if (obstacle_distances[i] < ir_sensors.obstacle_distance_min):
+            obstacles[i-2]
     rospy.set_param('obstacles', obstacles)
 
 def ir_data_process(ir_sensors):

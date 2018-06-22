@@ -200,3 +200,8 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+add_executable(velocity_control src/velocity_control.cpp)
+target_link_libraries(velocity_control ${catkin_LIBRARIES})
+add_dependencies(velocity_control ir_sensors_generate_messages.cpp)
+

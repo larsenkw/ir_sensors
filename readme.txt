@@ -65,6 +65,12 @@ change the permissions of that port using:
 
 $ sudo chmod 666 /dev/ttyACM0
 
+You may also need to add yourself to the 'dialout' group with the following command:
+
+$ [user@machine ~]$ sudo usermod -a -G dialout [user]
+
+Where you type your username instead of [user].
+
 ----- Using Array ROS messages
 One of the errors I kept getting was:
 [ERROR] [WallTime: 1344388188.090867] Lost sync with device, restarting...
