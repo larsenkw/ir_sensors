@@ -13,6 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   message_generation
+  tf
+  tf_conversions
 )
 
 ## System dependencies are found with CMake's conventions
@@ -204,4 +206,3 @@ include_directories(
 add_executable(velocity_control src/velocity_control.cpp)
 target_link_libraries(velocity_control ${catkin_LIBRARIES})
 add_dependencies(velocity_control ir_sensors_generate_messages.cpp)
-

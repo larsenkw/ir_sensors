@@ -1,41 +1,56 @@
 #include "ros/ros.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "geometry_msgs/TwistStamped.h"
+#include "geometry_msgs/PointStamped.h"
 #include "std_msgs/Bool.h"
 #include "std_msgs/String.h"
 #include "std_msgs/Int8.h"
+#include <sstream>
 #include <iostream>
 #include <math.h>
+#include <tf/transform_listener.h>
+#include <boost/bind.hpp>
 using namespace std;
 
-
-// Create globally accessible node
-//ros::NodeHandle nh;
 
 class Server
 {
 private:
-    ros::Subscriber sub_combined_pose;
+    ros::NodeHandle nh;
     ros::Subscriber sub_following_status;
     ros::Subscriber sub_connection_status;
     ros::Subscriber sub_command;
     ros::Subscriber sub_num_sensors;
     ros::Publisher pub_velocity_command;
-    ros::NodeHandle nh;
+    tf::TransformListener listener;
     // Message variables
     std_msgs::Bool following; // indicates whether phone app says to follow
     std_msgs::Bool connection; // indicates whether bluetooth is connected
     std_msgs::String command; // command name
-    geometry_msgs::PoseStamped pose; // the human's pose w.r.t. IR sensors
+    geometry_msgs::PoseStamped ir_pose; // the human's pose w.r.t. IR sensors
+    geometry_msgs::PoseStamped cam_pose; // the human's pose w.r.t. camera
+    geometry_msgs::PoseStamped ir_pose_robot; // human's pose w.r.t. robot
+    geometry_msgs::PoseStamped cam_pose_robot; // human's pose w.r.t. robot
+    geometry_msgs::PoseStamped selected_pose; // pose selected by logic function for velocity command
     geometry_msgs::TwistStamped velocity; // robot velocity command
     // Method selection variables
-    bool using_ir;
     bool using_camera;
+    bool using_ir;
     // Sensor limits
     double ir_d_offset; // m
-    double ir_d_max; // m
-    double ir_d_min; // m
+    geometry_msgs::PointStamped ir_d_max; // m
+    geometry_msgs::PointStamped ir_d_min; // m
+    geometry_msgs::PointStamped ir_d_max_robot; // m
+    geometry_msgs::PointStamped ir_d_min_robot; // m
     double ir_delta; // m
+    double cam_d_offset; // m
+    geometry_msgs::PointStamped cam_d_max; // m
+    geometry_msgs::PointStamped cam_d_min; // m
+    geometry_msgs::PointStamped cam_zero_pos; // m
+    geometry_msgs::PointStamped cam_d_max_robot; // m
+    geometry_msgs::PointStamped cam_d_min_robot; // m
+    geometry_msgs::PointStamped cam_zero_pos_robot; // m
+    double cam_delta; // m
     double d_offset; // m
     double d_max; // m
     double d_min; // m
@@ -51,9 +66,6 @@ private:
 public:
     Server()
     {
-        // Grab incoming pose from logic function
-        //sub_combined_pose = nh.subscribe<geometry_msgs::PoseStamped>("combined_pose", 10, &Server::poseCallback, this);
-        sub_combined_pose = nh.subscribe<geometry_msgs::PoseStamped>("IR_pose", 10, &Server::poseCallback, this);
         // Receive following status
         sub_following_status = nh.subscribe<std_msgs::Bool>("following_status", 10, &Server::followingCallback, this);
         // Receive connection status
@@ -69,24 +81,85 @@ public:
         connection.data = false;
         command.data = "";
 
-        using_ir = true;
-        using_camera = false;
-        ir_d_offset = 0.50;
-        ir_d_max = 1.40;
-        ir_d_min = 0.20;
+        using_camera = true;
+        using_ir = false;
+        ir_d_offset = 0.70;
+        // Set min and max points in sensor frames
+        ir_d_max.header.frame_id = "IR_frame";
+        ir_d_max.point.x = 0.0;
+        ir_d_max.point.y = 0.0;
+        ir_d_max.point.z = 1.50;
+        ir_d_min.header.frame_id = "IR_frame";
+        ir_d_min.point.x = 0.0;
+        ir_d_min.point.y = 0.0;
+        ir_d_min.point.z = 0.20;
         ir_delta = 0.10;
+        cam_d_offset = 0.70;
+        cam_d_max.header.frame_id = "cam_frame";
+        cam_d_max.point.x = 3.50;
+        cam_d_max.point.y = 0.0;
+        cam_d_max.point.z = 0.0;
+        cam_d_min.header.frame_id = "cam_frame";
+        cam_d_min.point.x = 0.50;
+        cam_d_min.point.y = 0.0;
+        cam_d_min.point.z = 0.0;
+        cam_zero_pos.header.frame_id = "cam_frame";
+        cam_zero_pos.point.x = 0;
+        cam_zero_pos.point.y = 0;
+        cam_zero_pos.point.z = 0;
+        cam_delta = 0.10;
+        // Common values
+        d_offset = 0.70; // m
+        delta = 0.10; // m
         correcting_direction = 0;
         k_lin_forward = 0.8;
         k_lin_reverse = 1.5;
         k_ang = 10;
         num_sensors = 0;
-
-        //FIXME: Currently assigning ir values to commom values
-        d_offset = ir_d_offset;
-        d_max = ir_d_max;
-        d_min = ir_d_min;
-        delta = ir_delta;
     }
+
+    void controlLoop() {
+        // Get poses from IR sensors and camera
+        boost::shared_ptr<geometry_msgs::PoseStamped const> sharedPtr;
+        sharedPtr = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("camera_pose", ros::Duration(1.0));
+        if (sharedPtr != NULL){
+            cam_pose = *sharedPtr;
+        }
+        sharedPtr = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("IR_pose", ros::Duration(1.0));
+        if (sharedPtr != NULL){
+            ir_pose = *sharedPtr;
+        }
+
+        // Transform poses and points into current robot frame
+        transformPosesAndPoints();
+
+        // Perform logic to determine sensor to use
+        selectPose();
+
+        // Run follow command function to process newly selected pose
+        followCommand();
+    }
+
+    // Transform all sensor values into the robot frame
+    void transformPosesAndPoints(){
+        ros::Time now = ros::Time::now();
+        listener.waitForTransform("/base_footprint", "/IR_frame", now, ros::Duration(1.0));
+        try {
+            // Transform Poses
+            listener.transformPose("/base_footprint", ir_pose, ir_pose_robot);
+            listener.transformPose("/base_footprint", cam_pose, cam_pose_robot);
+            // Transform Points
+            listener.transformPoint("/base_footprint", ir_d_max, ir_d_max_robot);
+            listener.transformPoint("/base_footprint", cam_d_max, cam_d_max_robot);
+            listener.transformPoint("/base_footprint", ir_d_min, ir_d_min_robot);
+            listener.transformPoint("/base_footprint", cam_d_min, cam_d_min_robot);
+            listener.transformPoint("/base_footprint", cam_zero_pos, cam_zero_pos_robot);
+        }
+        catch(tf::TransformException& ex) {
+            ROS_ERROR("Transform Exception: %s", ex.what());
+        }
+    }
+
     // Update following status when new command received
     void followingCallback(const std_msgs::Bool::ConstPtr &msg)
     {
@@ -107,9 +180,45 @@ public:
     }
 
     // Update current pose when received
-    void poseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
+    void selectPose()
     {
-        pose = *msg;
+        std::cout << "(" << cam_pose_robot.pose.position.x << "," << cam_zero_pos_robot.point.x << ")";
+        std::cout << endl;
+        ROS_INFO("Selecting pose");
+        // Check if camera pose is valid, if so, use camera
+        if (cam_pose_robot.pose.position.x != cam_zero_pos_robot.point.x) {
+            if ((cam_pose_robot.pose.position.x <= cam_d_max_robot.point.x) and
+                (cam_pose_robot.pose.position.x >= cam_d_min_robot.point.x)) {
+                selected_pose = cam_pose_robot;
+                d_max = cam_d_max_robot.point.x;
+                d_min = cam_d_min_robot.point.x;
+                using_camera = true;
+                using_ir = false;
+            }
+        }
+        // If camera pose is not value and IR pose is valid, use IR
+        // Checks IR values are within range and at least one sensor is not maxed out
+        else if ((ir_pose_robot.pose.position.x <= ir_d_max_robot.point.x) and
+                 (ir_pose_robot.pose.position.x >= ir_d_min_robot.point.x) and
+                 (num_sensors != 0)) {
+            selected_pose = ir_pose_robot;
+            d_max = ir_d_max_robot.point.x;
+            d_min = ir_d_min_robot.point.x;
+            using_camera = false;
+            using_ir = true;
+        }
+        // Else search for person.
+        else {
+            using_camera = false;
+            using_ir = false;
+            findPerson();
+        }
+    }
+
+    // Function for finding the person again (to be implemented in the future)
+    void findPerson() {
+        // Right now this function just stops the robot
+        following.data = false;
         followCommand();
     }
 
@@ -129,7 +238,7 @@ public:
             velocity.twist.linear.x = 0;
             velocity.twist.angular.z = 0;
             pub_velocity_command.publish(velocity);
-            ROS_INFO("Stopped, lin.x: %f, ang.z: %f", velocity.twist.linear.x, velocity.twist.angular.z);
+            ROS_INFO("Stopped, lin.x: %f, ang.z: %f, camera: %d, ir: %d", velocity.twist.linear.x, velocity.twist.angular.z, using_camera, using_ir);
         }
     }
 
@@ -137,7 +246,7 @@ public:
     void velocityCommand(){
         //----- Linear Velocity -----//
         // Proportional control for velocity
-        double distance = sqrt(pow(pose.pose.position.x,2) + pow(pose.pose.position.y,2));
+        double distance = sqrt(pow(selected_pose.pose.position.x,2) + pow(selected_pose.pose.position.y,2));
         if (distance <= d_max){
             d_error = distance - d_offset;
             // If distance is outside d_offset +/- delta then move until you get to d_offset
@@ -176,24 +285,11 @@ public:
 
         //----- Angular Velocity -----//
         // Angular velocity is proportional to the number of sensors that are maxed out
-        if (pose.pose.position.x == 0){
+        if (selected_pose.pose.position.x == 0){
             velocity.twist.angular.z = 0;
         }
         else {
-            velocity.twist.angular.z = k_ang*atan2(pose.pose.position.y,pose.pose.position.x);
-        }
-
-        // If distance is out of range, STOP
-        if (using_ir){
-            // IR Check, sees if the number of sensors maxed out is 6
-            if (num_sensors == 0){
-                velocity.twist.linear.x = 0;
-                velocity.twist.angular.z = 0;
-                correcting_direction = 0;
-            }
-        }
-        else{
-            // Camera Check
+            velocity.twist.angular.z = k_ang*atan2(selected_pose.pose.position.y,selected_pose.pose.position.x);
         }
 
         // Send velocity to obstacle checker
@@ -207,7 +303,6 @@ public:
         std::vector<int> obstacles;
         nh.getParam("obstacles", obstacles);
 
-        /*
         // Check locations of obstacles, if present block motion in that direction
         // Turning left is position, right is negative (right-hand rule)
         // 1: Front Left, block forward motion and left turning
@@ -264,11 +359,10 @@ public:
                 velocity.twist.angular.z = 0;
             }
         }
-        */
 
         // Publish new velocity command to velocity smoother topic
         pub_velocity_command.publish(velocity);
-        ROS_INFO("Following, lin.x: %f, ang.z: %f", velocity.twist.linear.x, velocity.twist.angular.z);
+        ROS_INFO("Following, lin.x: %f, ang.z: %f, camera: %d, ir: %d", velocity.twist.linear.x, velocity.twist.angular.z, using_camera, using_ir);
     }
 };
 
@@ -278,7 +372,14 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "velocity_control");
     Server server;
 
-    ros::spin();
+    ros::Rate loop_rate(10);
+
+    while(ros::ok()) {
+        server.controlLoop();
+        ros::spinOnce();
+        loop_rate.sleep();
+    }
+    //ros::spin();
 
     return 0;
 }

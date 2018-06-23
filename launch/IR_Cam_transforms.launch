@@ -1,0 +1,12 @@
+<launch>
+
+    <node pkg = "tf"
+        type = "static_transform_publisher"
+        name = "IR_broadcaster"
+        args = "0.15 0 0.87 -1.570796 0 -1.570796 base_footprint IR_frame 100" />
+    <node pkg = "tf"
+        type = "static_transform_publisher"
+        name = "Cam_broadcaster"
+        args = "0.12 0 0.95 0 0 0 base_footprint Cam_frame 100" />
+
+</launch>

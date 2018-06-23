@@ -161,7 +161,7 @@ class IRSensors(object):
         # If all sensors are maxed out, theta_p = 0deg
         if not (sum(maxed_out) == 6):
             # Removed maxed out data
-            spacing = 2
+            spacing = 0.02 # m
             y = np.array([distances[0],distances[1],distances[2],distances[3],distances[4],distances[5]])
             #x = np.array([5*spacing,4*spacing,3*spacing,2*spacing,1*spacing,0*spacing])
             x = np.array([2.5*spacing, 1.5*spacing, 0.5*spacing, -0.5*spacing, -1.5*spacing, -2.5*spacing])
@@ -211,7 +211,7 @@ class IRSensors(object):
         pose.header.seq = self.seq
         self.seq += 1
         pose.header.stamp = header.stamp
-        pose.header.frame_id = 'IR_Pose'
+        pose.header.frame_id = 'IR_frame'
         pose.pose.position.z = avg_distance
         pose.pose.position.x = np.mean(x)
         k = [0, 1, 0] # axis of rotation, Y-axis
