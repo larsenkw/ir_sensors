@@ -315,7 +315,7 @@ public:
         else {
             if (correcting_direction == 0) {
                 velocity.twist.angular.z = k_ang*atan2(selected_pose.pose.position.y,selected_pose.pose.position.x);
-                if (abs(velocity.twist.angular.z) < 0.01) {
+                if (abs(velocity.twist.angular.z) < 0.02) {
                     velocity.twist.angular.z = 0;
                 }
             }
