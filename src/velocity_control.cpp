@@ -166,18 +166,12 @@ public:
         now = ros::Time::now();
         listener.waitForTransform("/base_footprint", "/Cam_frame", now, ros::Duration(1.0));
         try {
-            cout << "Entered camera transform statement\n";
-            cout << "Current camera pose: (" << cam_pose.pose.position.x << "," << cam_pose.pose.position.y << "," << cam_pose.pose.position.z << ")\n";
             // Transform Poses
-            //listener.transformPose("/base_footprint", cam_pose, cam_pose_robot);
-            cout << "Cam pose change\n";
+            listener.transformPose("/base_footprint", cam_pose, cam_pose_robot);
             // Transform Points
             listener.transformPoint("/base_footprint", cam_d_max, cam_d_max_robot);
-            cout << "Cam max point\n";
             listener.transformPoint("/base_footprint", cam_d_min, cam_d_min_robot);
-            cout << "Cam min point\n";
             listener.transformPoint("/base_footprint", cam_zero_pos, cam_zero_pos_robot);
-            cout << "Cam zero point\n";
 
             // FIXME: print out camera pose in robot frame
             cout << "Cam: (" << cam_pose_robot.pose.position.x << "," << cam_pose_robot.pose.position.y << ")\n";
