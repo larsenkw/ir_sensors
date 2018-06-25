@@ -114,7 +114,7 @@ public:
         correcting_direction = 0;
         k_lin_forward = 0.8;
         k_lin_reverse = 1.0;
-        k_ang = 10;
+        k_ang = 5;
         num_sensors = 0;
     }
 
@@ -203,7 +203,6 @@ public:
     // Update current pose when received
     void selectPose()
     {
-        ROS_INFO("Selecting pose");
         // Check if camera pose is valid, if so, use camera
         if (cam_pose_robot.pose.position.x != cam_zero_pos_robot.point.x) {
             if ((cam_pose_robot.pose.position.x <= cam_d_max_robot.point.x) and
@@ -213,6 +212,7 @@ public:
                 d_min = cam_d_min_robot.point.x;
                 using_camera = true;
                 using_ir = false;
+                ROS_INFO("Camera selected");
             }
         }
         // If camera pose is not value and IR pose is valid, use IR
@@ -225,11 +225,13 @@ public:
             d_min = ir_d_min_robot.point.x;
             using_camera = false;
             using_ir = true;
+            ROS_INFO("IR selected");
         }
         // Else search for person.
         else {
             using_camera = false;
             using_ir = false;
+            ROS_INFO("Finding person...");
             findPerson();
         }
     }
