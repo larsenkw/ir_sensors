@@ -1,0 +1,32 @@
+<launch>
+  <!-- Name of the USB port the Arduino is connected to -->
+  <arg name="port" default="/dev/ttyACM0" />
+
+  <!--sStart up Turtlebot -->
+  <include file="$(find turtlebot_bringup)/launch/minimal.launch" />
+
+  <!-- launch file with transforms for IR_frame and Cam_frame to base_footprint -->
+  <include file="$(find ir_sensors)/launch/IR_Cam_transform.launch" />
+
+  <!-- start IR Sensor nodes -->
+  <!-- start Arduino node -->
+  <node pkg="rosserial_python" type="serial_node.py" name="serial_node" respawn="true">
+    <param name="port" value="$(arg port)" />
+  </node>
+
+  <!-- start IR data conversion node -->
+  <node pkg="ir_sensors" type="ir_data_process.py" name="ir_data_process" />
+
+  <!-- start up camera with body tracker -->
+  <node pkg="astra_body_tracker" type="astra_body_tracker_node" name="astra_body_tracker_node" />
+
+  <!-- node for grabbing the skeleton pose and republishing in correct format -->
+  <node pkg="python_follower" type="gesture_kinect.py" name="gesture_kinect" />
+
+  <!-- start velocity control node  -->
+  <node pkg="ir_sensors" type="velocity_control" name="velocity_control" />
+
+  <!-- start velocity smoother node -->
+  <!-- <node pkg="ir_sensors" type="vel_smoother.py" name="vel_smoother" /> -->
+
+</launch>
