@@ -11,7 +11,7 @@ class Server(object):
         self.smoothing = smoothing
         self.frequency = 60. # Hz
         self.max_accel_lin = 1. # m/s^2
-        self.max_accel_ang = 1. # rad/s^2
+        self.max_accel_ang = 0.1. # rad/s^2
         self.delta_v_lin = self.max_accel_lin/self.frequency # maximum change in velocity since previous command
         self.delta_v_ang = self.max_accel_ang/self.frequency # maximum change in angular velocity
         self.command_Twist = Twist()
