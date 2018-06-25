@@ -313,7 +313,15 @@ public:
             velocity.twist.angular.z = 0;
         }
         else {
-            velocity.twist.angular.z = k_ang*atan2(selected_pose.pose.position.y,selected_pose.pose.position.x);
+            if (correcting_direction == 0) {
+                velocity.twist.angular.z = k_ang*atan2(selected_pose.pose.position.y,selected_pose.pose.position.x);
+                if (abs(velocity.twist.angular.z) < 0.005) {
+                    velocity.twist.angular.z = 0;
+                }
+            }
+            else {
+                velocity.twist.angular.z = k_ang*atan2(selected_pose.pose.position.y,selected_pose.pose.position.x);
+            }
         }
 
         // Send velocity to obstacle checker
