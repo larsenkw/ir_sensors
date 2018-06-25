@@ -142,25 +142,38 @@ public:
 
     // Transform all sensor values into the robot frame
     void transformPosesAndPoints(){
+        // Transform IR Frame
         ros::Time now = ros::Time::now();
         listener.waitForTransform("/base_footprint", "/IR_frame", now, ros::Duration(1.0));
         try {
             // Transform Poses
             listener.transformPose("/base_footprint", ir_pose, ir_pose_robot);
-            listener.transformPose("/base_footprint", cam_pose, cam_pose_robot);
             // Transform Points
             listener.transformPoint("/base_footprint", ir_d_max, ir_d_max_robot);
-            listener.transformPoint("/base_footprint", cam_d_max, cam_d_max_robot);
             listener.transformPoint("/base_footprint", ir_d_min, ir_d_min_robot);
-            listener.transformPoint("/base_footprint", cam_d_min, cam_d_min_robot);
-            listener.transformPoint("/base_footprint", cam_zero_pos, cam_zero_pos_robot);
 
-            // FIXME: print out camera/ir pose in robot frame
-            cout << "Cam: (" << cam_pose_robot.pose.position.x << "," << cam_pose_robot.pose.position.y << ")\n";
+            // FIXME: print out ir pose in robot frame
             cout << "IR: (" << ir_pose_robot.pose.position.x << "," << ir_pose_robot.pose.position.y << ")\n";
         }
         catch(tf::TransformException& ex) {
-            ROS_ERROR("Transform Exception: %s", ex.what());
+            ROS_ERROR("IR Transform Exception: %s", ex.what());
+        }
+        // Transform Camera Frame
+        now = ros::Time::now();
+        listener.waitForTransform("/base_footprint", "/Cam_frame", now, ros::Duration(1.0));
+        try {
+            // Transform Poses
+            listener.transformPose("/base_footprint", cam_pose, cam_pose_robot);
+            // Transform Points
+            listener.transformPoint("/base_footprint", cam_d_max, cam_d_max_robot);
+            listener.transformPoint("/base_footprint", cam_d_min, cam_d_min_robot);
+            listener.transformPoint("/base_footprint", cam_zero_pos, cam_zero_pos_robot);
+
+            // FIXME: print out camera pose in robot frame
+            cout << "Cam: (" << cam_pose_robot.pose.position.x << "," << cam_pose_robot.pose.position.y << ")\n";
+        }
+        catch(tf::TrasnformException& ex) {
+            ROS_ERROR("Cam Transform Exception: %s", ex.what());
         }
     }
 
