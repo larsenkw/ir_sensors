@@ -6,7 +6,7 @@
   <include file="$(find turtlebot_bringup)/launch/minimal.launch" />
 
   <!-- launch file with transforms for IR_frame and Cam_frame to base_footprint -->
-  <include file="$(find ir_sensors)/launch/IR_Cam_transform.launch" />
+  <include file="$(find ir_sensors)/launch/IR_Cam_transforms.launch" />
 
   <!-- start IR Sensor nodes -->
   <!-- start Arduino node -->
