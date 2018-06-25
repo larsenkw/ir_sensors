@@ -315,7 +315,7 @@ public:
         // 1: Front Left, block forward motion and left turning
         if (obstacles[0] == 1){
             if (velocity.twist.linear.x > 0){
-                velocity.twist.linear.x = 0;
+                velocity.twist.linear.x *= 0.1;
             }
             if (velocity.twist.angular.z > 0){
                 velocity.twist.angular.z = 0;
@@ -360,7 +360,7 @@ public:
         // 7: Front Right, block forward motion and right turning
         if (obstacles[6] == 1){
             if (velocity.twist.linear.x > 0){
-                velocity.twist.linear.x = 0;
+                velocity.twist.linear.x *= 0.1;
             }
             if (velocity.twist.angular.z < 0){
                 velocity.twist.angular.z = 0;
