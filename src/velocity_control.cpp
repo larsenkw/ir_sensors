@@ -208,8 +208,6 @@ public:
     // Update current pose when received
     void selectPose()
     {
-        std::cout << "(" << cam_pose_robot.pose.position.x << "," << cam_zero_pos_robot.point.x << ")";
-        std::cout << endl;
         ROS_INFO("Selecting pose");
         // Check if camera pose is valid, if so, use camera
         if (cam_pose_robot.pose.position.x != cam_zero_pos_robot.point.x) {
