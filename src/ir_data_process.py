@@ -54,7 +54,7 @@ class IRSensors(object):
         # Desired threshold for avoiding noisy data at the IR reading limit
         self.threshold_max = 1.40 # m
         # Minimum distance to be considered obstacles
-        self.obstacle_distance_min = 0.30 # m
+        self.obstacle_distance_min = 0.50 # m
 
         # Create linear interpolation function from inverse distance plot found in the
         # data sheet for GP2Y0A41SK0F (the .csv files is saved as '4-30cm Inverse Plot

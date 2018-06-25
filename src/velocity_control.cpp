@@ -154,6 +154,10 @@ public:
             listener.transformPoint("/base_footprint", ir_d_min, ir_d_min_robot);
             listener.transformPoint("/base_footprint", cam_d_min, cam_d_min_robot);
             listener.transformPoint("/base_footprint", cam_zero_pos, cam_zero_pos_robot);
+
+            // FIXME: print out camera/ir pose in robot frame
+            cout << "Cam: (" << cam_pose_robot.pose.position.x << "," << cam_pose_robot.pose.position.y << ")\n";
+            cout << "IR: (" << ir_pose_robot.pose.position.x << "," << ir_pose_robot.pose.position.y << ")\n";
         }
         catch(tf::TransformException& ex) {
             ROS_ERROR("Transform Exception: %s", ex.what());
@@ -244,6 +248,9 @@ public:
 
     // Sends final velocity command
     void velocityCommand(){
+        // FIXME: print out selected pose for comparison
+        cout << "Selected: (" << selected_pose.pose.position.x << "," << selected_pose.pose.position.y << ")\n";
+
         //----- Linear Velocity -----//
         // Proportional control for velocity
         double distance = sqrt(pow(selected_pose.pose.position.x,2) + pow(selected_pose.pose.position.y,2));
