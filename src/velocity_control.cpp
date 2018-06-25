@@ -130,6 +130,10 @@ public:
             ir_pose = *sharedPtr;
         }
 
+        // FIXME: test raw data from camera and IR
+        cout << "Camera raw: (" << cam_pose.pose.position.x << "," << cam_pose.pose.position.y << "," << cam_pose.pose.position.z << ")\n";
+        cout << "IR raw: (" << ir_pose.pose.position.x << "," << ir_pose.pose.position.y << "," << ir_pose.pose.position.z << ")\n";
+
         // Transform poses and points into current robot frame
         transformPosesAndPoints();
 
