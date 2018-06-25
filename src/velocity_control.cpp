@@ -172,7 +172,7 @@ public:
             // FIXME: print out camera pose in robot frame
             cout << "Cam: (" << cam_pose_robot.pose.position.x << "," << cam_pose_robot.pose.position.y << ")\n";
         }
-        catch(tf::TrasnformException& ex) {
+        catch(tf::TransformException& ex) {
             ROS_ERROR("Cam Transform Exception: %s", ex.what());
         }
     }
