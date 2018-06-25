@@ -169,7 +169,7 @@ public:
             cout << "Entered camera transform statement\n";
             cout << "Current camera pose: (" << cam_pose.pose.position.x << "," << cam_pose.pose.position.y << "," << cam_pose.pose.position.z << ")\n";
             // Transform Poses
-            listener.transformPose("/base_footprint", cam_pose, cam_pose_robot);
+            //listener.transformPose("/base_footprint", cam_pose, cam_pose_robot);
             cout << "Cam pose change\n";
             // Transform Points
             listener.transformPoint("/base_footprint", cam_d_max, cam_d_max_robot);
