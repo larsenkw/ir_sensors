@@ -2,7 +2,7 @@
 
 from __future__ import print_function
 import rospy
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import TwistStamped
 
 class Server(object):
     def __init__(self, smoothing=True):
@@ -13,13 +13,13 @@ class Server(object):
         self.max_accel_ang = 1. # rad/s^2
         self.delta_v_lin = self.max_accel_lin/self.frequency # maximum change in velocity since previous command
         self.delta_v_ang = self.max_accel_ang/self.frequency # maximum change in angular velocity
-        self.command_Twist = Twist()
-        self.command_Twist.linear.x = 0.
-        self.command_Twist.angular.z = 0.
-        self.smoothed_Twist = Twist() # final Twist command sent to turtlebot after being smoothed
-        self.smoothed_Twist.linear.x = 0.
-        self.smoothed_Twist.angular.z = 0.
-        self.previous_Twist = Twist() # previously seen Twist command from last publish
+        self.command_Twist = TwistStamped()
+        self.command_Twist.twist.linear.x = 0.
+        self.command_Twist.twist.angular.z = 0.
+        self.smoothed_Twist = TwistStamped() # final Twist command sent to turtlebot after being smoothed
+        self.smoothed_Twist.twist.linear.x = 0.
+        self.smoothed_Twist.twist.angular.z = 0.
+        self.previous_Twist = TwistStamped() # previously seen Twist command from last publish
         self.previous_Twist = self.smoothed_Twist
 
     def callback_update_command(self, msg):
@@ -28,27 +28,27 @@ class Server(object):
 
     def callback_vel_smoother(self, msg):
         # Linear Smoothing
-        self.previous_Twist.linear.x = msg.linear.x
+        self.previous_Twist.twist.linear.x = msg.twist.linear.x
         # Command is within lower limit
-        if (self.command_Twist.linear.x >= self.previous_Twist.linear.x - self.delta_v_lin):
+        if (self.command_Twist.twist.linear.x >= self.previous_Twist.twist.linear.x - self.delta_v_lin):
             # Command is above upper limit
-            if (self.command_Twist.linear.x > self.previous_Twist.linear.x + self.delta_v_lin):
-                self.smoothed_Twist.linear.x = self.previous_Twist.linear.x + self.delta_v_lin
+            if (self.command_Twist.twist.linear.x > self.previous_Twist.twist.linear.x + self.delta_v_lin):
+                self.smoothed_Twist.twist.linear.x = self.previous_Twist.twist.linear.x + self.delta_v_lin
             else:
                 # Command is within range
-                self.smoothed_Twist.linear.x = self.command_Twist.linear.x
+                self.smoothed_Twist.twist.linear.x = self.command_Twist.twist.linear.x
         # Command is below lower limit
         else:
-            self.smoothed_Twist.linear.x = self.previous_Twist.linear.x - self.delta_v_lin
+            self.smoothed_Twist.twist.linear.x = self.previous_Twist.twist.linear.x - self.delta_v_lin
         # Angular Smoothing (same logic as above)
-        self.previous_Twist.angular.z = msg.angular.z
-        if (self.command_Twist.angular.z >= self.previous_Twist.angular.z - self.delta_v_ang):
-            if (self.command_Twist.angular.z > self.previous_Twist.angular.z + self.delta_v_ang):
-                self.smoothed_Twist.angular.z = self.previous_Twist.angular.z + self.delta_v_ang
+        self.previous_Twist.twist.angular.z = msg.twist.angular.z
+        if (self.command_Twist.twist.angular.z >= self.previous_Twist.twist.angular.z - self.delta_v_ang):
+            if (self.command_Twist.twist.angular.z > self.previous_Twist.twist.angular.z + self.delta_v_ang):
+                self.smoothed_Twist.twist.angular.z = self.previous_Twist.twist.angular.z + self.delta_v_ang
             else:
-                self.smoothed_Twist.angular.z = self.command_Twist.angular.z
+                self.smoothed_Twist.twist.angular.z = self.command_Twist.twist.angular.z
         else:
-            self.smoothed_Twist.angular.z = self.previous_Twist.angular.z - self.delta_v_ang
+            self.smoothed_Twist.twist.angular.z = self.previous_Twist.twist.angular.z - self.delta_v_ang
 
 server = Server()
 def vel_smoother(server):
@@ -56,12 +56,12 @@ def vel_smoother(server):
 
     # Subscriber to velocity controller to update commands
     #rospy.Subscriber('ir_cmd_vel', Twist, server.callback_update_command) # for ir sensors
-    rospy.Subscriber("vel_cmd_obstacle", Twist, server.callback_update_command) # for combined
+    rospy.Subscriber("vel_cmd_obstacle", TwistStamped, server.callback_update_command) # for combined
     # Subscribe to its own publisher so it updates the smoothed velocity with each publish
-    rospy.Subscriber('cmd_vel_mux/input/teleop', Twist, server.callback_vel_smoother)
+    rospy.Subscriber('cmd_vel_mux/input/teleop', TwistStamped, server.callback_vel_smoother)
 
     # Create Publisher
-    pub_vel = rospy.Publisher('cmd_vel_mux/input/teleop', Twist, queue_size = 10)
+    pub_vel = rospy.Publisher('cmd_vel_mux/input/teleop', TwistStamped, queue_size = 10)
 
     # Continue publishing at a specific frequency to help with smoothing
     rate = rospy.Rate(server.frequency)
