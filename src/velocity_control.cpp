@@ -167,6 +167,7 @@ public:
         listener.waitForTransform("/base_footprint", "/Cam_frame", now, ros::Duration(1.0));
         try {
             cout << "Entered camera transform statement\n";
+            cout << "Current camera pose: (" << cam_pose.pose.position.x << "," << cam_pose.pose.position.y << "," << cam_pose.pose.position.z << ")\n";
             // Transform Poses
             listener.transformPose("/base_footprint", cam_pose, cam_pose_robot);
             cout << "Cam pose change\n";
