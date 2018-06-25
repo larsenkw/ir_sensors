@@ -24,7 +24,7 @@
   <node pkg="python_follower" type="gesture_kinect.py" name="gesture_kinect" />
 
   <!-- start velocity control node  -->
-  <node pkg="ir_sensors" type="velocity_control" name="velocity_control" />
+  <node pkg="ir_sensors" type="velocity_control" name="velocity_control" output="screen" />
 
   <!-- start velocity smoother node -->
   <!-- <node pkg="ir_sensors" type="vel_smoother.py" name="vel_smoother" /> -->
