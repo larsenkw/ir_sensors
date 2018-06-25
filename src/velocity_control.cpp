@@ -113,7 +113,7 @@ public:
         delta = 0.10; // m
         correcting_direction = 0;
         k_lin_forward = 0.8;
-        k_lin_reverse = 1.5;
+        k_lin_reverse = 1.0;
         k_ang = 10;
         num_sensors = 0;
     }
