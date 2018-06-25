@@ -2,8 +2,8 @@
   <!-- Name of the USB port the Arduino is connected to -->
   <arg name="port" default="/dev/ttyACM0" />
 
-  <!--sStart up Turtlebot -->
-  <include file="$(find turtlebot_bringup)/launch/minimal.launch" />
+  <!-- start up Turtlebot -->
+  <!-- <include file="$(find turtlebot_bringup)/launch/minimal.launch" /> -->
 
   <!-- launch file with transforms for IR_frame and Cam_frame to base_footprint -->
   <include file="$(find ir_sensors)/launch/IR_Cam_transforms.launch" />
