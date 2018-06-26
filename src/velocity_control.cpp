@@ -403,7 +403,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "velocity_control");
     Server server;
 
-    ros::Rate loop_rate(30);
+    ros::Rate loop_rate(20);
 
     while(ros::ok()) {
         server.controlLoop();
