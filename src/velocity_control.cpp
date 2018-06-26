@@ -231,16 +231,15 @@ public:
         else {
             using_camera = false;
             using_ir = false;
-            ROS_INFO("Finding person...");
             findPerson();
         }
     }
 
     // Function for finding the person again (to be implemented in the future)
     void findPerson() {
+        ROS_INFO("Finding person...");
         // Right now this function just stops the robot
         following.data = false;
-        ROS_INFO("Stopping");
         followCommand();
     }
 
