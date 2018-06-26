@@ -10,7 +10,7 @@ class Server(object):
         # Velocity smoothing parameters (be sure to make these values floats by adding a decimal point)
         self.smoothing = smoothing
         self.frequency = 60. # Hz
-        self.max_accel_lin = 1. # m/s^2
+        self.max_accel_lin = 0.5 # m/s^2
         self.max_accel_ang = 1. # rad/s^2
         self.delta_v_lin = self.max_accel_lin/self.frequency # maximum change in velocity since previous command
         self.delta_v_ang = self.max_accel_ang/self.frequency # maximum change in angular velocity
