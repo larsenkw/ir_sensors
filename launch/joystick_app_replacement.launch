@@ -1,0 +1,9 @@
+<launch>
+
+    <!-- This launch file replaces the Android App to allow anyone to test the
+    robot as long as they have the controller plugged in.
+    The 'A' button signals to 'follow' the 'B' button signals to 'stop' -->
+    <node pkg="joy" type="joy_node" name="joystick"/>
+    <node pkg="ir_sensors" type="joystick_app_replacement_node" name="joystick_app"/>
+
+</launch>

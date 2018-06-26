@@ -155,6 +155,14 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
+add_executable(velocity_control src/velocity_control.cpp)
+target_link_libraries(velocity_control ${catkin_LIBRARIES})
+add_dependencies(velocity_control ir_sensors_generate_messages.cpp)
+
+add_executable(joystick_app_replacement_node src/joystick_app_replacement_node.cpp)
+target_link_libraries(joystick_app_replacement_node ${catkin_LIBRARIES})
+add_dependencies(joystick_app_replacement_node ir_sensors_generate_messages.cpp)
+
 #############
 ## Install ##
 #############
@@ -202,7 +210,3 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
-
-add_executable(velocity_control src/velocity_control.cpp)
-target_link_libraries(velocity_control ${catkin_LIBRARIES})
-add_dependencies(velocity_control ir_sensors_generate_messages.cpp)

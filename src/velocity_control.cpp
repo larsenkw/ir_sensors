@@ -69,7 +69,7 @@ public:
         // Receive following status
         sub_following_status = nh.subscribe<std_msgs::Bool>("following_status", 10, &Server::followingCallback, this);
         // Receive connection status
-        sub_connection_status = nh.subscribe<std_msgs::Bool>("bt_connection_status", 10, &Server::connectionCallback, this);
+        sub_connection_status = nh.subscribe<std_msgs::Bool>("connection_status", 10, &Server::connectionCallback, this);
         // Receive new command
         sub_command = nh.subscribe<std_msgs::String>("other_commands", 10, &Server::commandCallback, this);
         // Receives the number of sensors not maxed out
