@@ -314,7 +314,7 @@ public:
         }
         else {
             if (correcting_direction == 0) {
-                if (abs(atan2(selected_pose.pose.position.y,selected_pose.pose.position.x)) < 0.02) {
+                if (abs(atan2(selected_pose.pose.position.y,selected_pose.pose.position.x)) < 0.01) {
                     velocity.twist.angular.z = 0;
                 }
             }
