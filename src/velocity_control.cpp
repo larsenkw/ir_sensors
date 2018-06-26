@@ -114,7 +114,7 @@ public:
         correcting_direction = 0;
         k_lin_forward = 0.8;
         k_lin_reverse = 1.0;
-        k_ang = 3;
+        k_ang = 2;
         num_sensors = 0;
     }
 
@@ -314,8 +314,7 @@ public:
         }
         else {
             if (correcting_direction == 0) {
-                velocity.twist.angular.z = k_ang*atan2(selected_pose.pose.position.y,selected_pose.pose.position.x);
-                if (abs(velocity.twist.angular.z) < 0.02) {
+                if (abs(atan2(selected_pose.pose.position.y,selected_pose.pose.position.x)) < 0.02) {
                     velocity.twist.angular.z = 0;
                 }
             }
