@@ -240,6 +240,7 @@ public:
     void findPerson() {
         // Right now this function just stops the robot
         following.data = false;
+        ROS_INFO("Stopping");
         followCommand();
     }
 
@@ -259,7 +260,7 @@ public:
             velocity.twist.linear.x = 0;
             velocity.twist.angular.z = 0;
             pub_velocity_command.publish(velocity);
-            ROS_INFO("Stopped, lin.x: %f, ang.z: %f, camera: %d, ir: %d", velocity.twist.linear.x, velocity.twist.angular.z, using_camera, using_ir);
+            //ROS_INFO("Stopped, lin.x: %f, ang.z: %f, camera: %d, ir: %d", velocity.twist.linear.x, velocity.twist.angular.z, using_camera, using_ir);
         }
     }
 
@@ -393,7 +394,7 @@ public:
 
         // Publish new velocity command to velocity smoother topic
         pub_velocity_command.publish(velocity);
-        ROS_INFO("Following, lin.x: %f, ang.z: %f, camera: %d, ir: %d", velocity.twist.linear.x, velocity.twist.angular.z, using_camera, using_ir);
+        //ROS_INFO("Following, lin.x: %f, ang.z: %f, camera: %d, ir: %d", velocity.twist.linear.x, velocity.twist.angular.z, using_camera, using_ir);
     }
 };
 
