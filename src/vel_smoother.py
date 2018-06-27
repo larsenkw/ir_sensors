@@ -57,7 +57,7 @@ def vel_smoother(server):
 
     # Subscriber to velocity controller to update commands
     #rospy.Subscriber('ir_cmd_vel', Twist, server.callback_update_command) # for ir sensors
-    rospy.Subscriber("vel_cmd_obstacle", TwistStamped, server.callback_update_command) # for combined
+    rospy.Subscriber("vel_cmd_obstacle", Twist, server.callback_update_command) # for combined
     # Subscribe to its own publisher so it updates the smoothed velocity with each publish
     rospy.Subscriber('cmd_vel_mux/input/teleop', Twist, server.callback_vel_smoother)
 
