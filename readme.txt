@@ -6,7 +6,7 @@ IR Sensor Package for ROS
 There are currently three nodes in this package required to run the demo. One of these nodes is for reading a phone app which should be merged into the Arduino node once the bluetooth hardware arrives, leaving only two nodes to worry about.
 
 Required files:
-ir_sensor_node.ino (Arduino node code)
+ir_sensor_node_BT_laserscan.ino (Arduino node code)
 ir_data_process.py (data processing code)
 '20-150cm Inverse Plot Data.csv' (data for IR regression function)
 
