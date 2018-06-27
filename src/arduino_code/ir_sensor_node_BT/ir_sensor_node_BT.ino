@@ -77,7 +77,7 @@ ros::NodeHandle nh;
 ir_sensors::IRDataStamped ir_scan;
 ros::Publisher ir_raw_data("ir_raw_data", &ir_scan);
 std_msgs::Bool following;
-ros::Publisher bt_following("_arduino_following_status", &following);
+ros::Publisher bt_following("arduino_following_status", &following);
 std_msgs::Bool connection;
 ros::Publisher bt_connection("arduino_connection_status", &connection);
 std_msgs::String command;

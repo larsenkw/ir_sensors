@@ -1,5 +1,6 @@
 #include "ros/ros.h"
 #include "geometry_msgs/PoseStamped.h"
+#include "geometry_msgs/Twist.h"
 #include "geometry_msgs/TwistStamped.h"
 #include "geometry_msgs/PointStamped.h"
 #include "std_msgs/Bool.h"
@@ -75,7 +76,7 @@ public:
         // Receives the number of sensors not maxed out
         sub_num_sensors = nh.subscribe<std_msgs::Int8>("num_sensors", 10, &Server::numSensorsCallback, this);
         // Publishes final velocity command to velocity smoother
-        pub_velocity_command = nh.advertise<geometry_msgs::TwistStamped>("vel_cmd_obstacle", 10);
+        pub_velocity_command = nh.advertise<geometry_msgs::Twist>("vel_cmd_obstacle", 10);
 
         following.data = false;
         connection.data = false;
@@ -392,7 +393,7 @@ public:
         }
 
         // Publish new velocity command to velocity smoother topic
-        pub_velocity_command.publish(velocity);
+        pub_velocity_command.publish(velocity.twist);
         //ROS_INFO("Following, lin.x: %f, ang.z: %f, camera: %d, ir: %d", velocity.twist.linear.x, velocity.twist.angular.z, using_camera, using_ir);
     }
 };

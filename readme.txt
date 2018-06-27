@@ -11,9 +11,17 @@ ir_data_process.py (data processing code)
 '20-150cm Inverse Plot Data.csv' (data for IR regression function)
 
 ================================================================================
+Launch Files
+================================================================================
+Main Launch File:
+turtlebot_camera_ir_follow.launch
+
+This launch file is the one that runs the full system. It starts up turtlebot and runs all the other necessary nodes to get the turtlebot following with the IR sensors and the camera.
+
+================================================================================
 Nodes
 ================================================================================
-ir_sensor_node/ir_sensor_node.ino
+ir_sensor_node_BT/ir_sensor_node_BT.ino
 
 This is the code that is run on the Arduino and must be uploaded through by using the IDE if not already on the Arduino. Take note of the port that the Arduino is on because you will need to edit that in the '.launch' file if it is different.
 
@@ -41,8 +49,12 @@ $ rosrun rosserial_arduino make_libraries.py ~/sketchbook/libraries
 A new 'ros_lib' folder will appear which should contain the messages you created in your package. Navigate to the 'ros_lib' folder and make sure you package name is listed there when using 'ls'.
 
 ================================================================================
-Arduino Troubleshooting ================================================================================ -----
-Sync Issues One of the errors I have often received is:
+Arduino Troubleshooting ================================================================================
+----- ROS libraries not recognized
+If you get an error saying '<ros.h>' cannot be found then make sure you have the preferences set to point to your sketchbook folder which contains the 'libraries' folder. Typically this should be in '~/sketchbook', so that it can find the files in '~/sketchbook/libraries/ros_lib'.
+
+----- Sync Issues
+One of the errors I have often received is:
 [ERROR] [WallTime: 1529003151.564960] Unable to sync with device; possible link
 problem or link software version mismatch such as hydro rosserial_python with
 groovy Arduino

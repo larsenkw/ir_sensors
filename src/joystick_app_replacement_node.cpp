@@ -50,6 +50,8 @@ public:
         }
 
         if (configuration == 'X') {
+            connection.data = true;
+            pub_joy_connection.publish(connection);
             // 'A' button is element 0, 'B' button is element 1
             if (msg->buttons[0] == 1) {
                 following.data = true;
@@ -59,9 +61,10 @@ public:
                 following.data = false;
                 pub_joy_follow.publish(following);
             }
-            connection.data = true;
         }
         else if (configuration == 'D') {
+            connection.data = true;
+            pub_joy_connection.publish(connection);
             // 'A' button is element 1, 'B' button is element 2
             if (msg->buttons[1] == 1) {
                 following.data = true;
@@ -71,16 +74,13 @@ public:
                 following.data = false;
                 pub_joy_follow.publish(following);
             }
-            connection.data = true;
         }
         else {
             // Unrecognized configuration
             following.data = false;
             connection.data = false;
-        }
-        if (prev_connection.data != connection.data) {
-            prev_connection.data = connection.data;
             pub_joy_connection.publish(connection);
+            pub_joy_follow.publish(following);
         }
     }
 };

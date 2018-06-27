@@ -25,7 +25,7 @@ class Server(object):
 
     def callback_update_command(self, msg):
         # Update the current command
-        self.command_Twist = msg.twist
+        self.command_Twist = msg
 
     def callback_vel_smoother(self, msg):
         # Linear Smoothing

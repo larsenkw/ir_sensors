@@ -3,10 +3,16 @@
   <arg name="port" default="/dev/ttyACM0" />
 
   <!-- start up Turtlebot -->
-  <!-- <include file="$(find turtlebot_bringup)/launch/minimal.launch" /> -->
+  <include file="$(find turtlebot_bringup)/launch/minimal.launch" />
 
   <!-- launch file with transforms for IR_frame and Cam_frame to base_footprint -->
   <include file="$(find ir_sensors)/launch/IR_Cam_transforms.launch" />
+
+  <!--  turtlebot's provided velocity smoother, must remap velocity command to "teleop_velocity_smoother/raw_cmd_vel" -->
+  <include file="$(find turtlebot_teleop)/launch/includes/velocity_smoother.launch.xml"/>
+
+  <!-- handles connection between App or controller -->
+  <node pkg="ir_sensors" type="connection_handler.py" name="connection_handler" />
 
   <!-- start IR Sensor nodes -->
   <!-- start Arduino node -->
@@ -14,8 +20,9 @@
     <param name="port" value="$(arg port)" />
   </node>
 
-  <!-- handles connection between App or controller -->
-  <node pkg="ir_sensors" type="connection_handler.py" name="connection_handler" />
+  <!-- start up joystick and node for reading commands -->
+  <node pkg="joy" type="joy_node" name="joystick"/>
+  <node pkg="ir_sensors" type="joystick_app_replacement_node" name="joystick_app"/>
 
   <!-- start IR data conversion node -->
   <node pkg="ir_sensors" type="ir_data_process.py" name="ir_data_process" />
@@ -27,9 +34,11 @@
   <node pkg="python_follower" type="gesture_kinect.py" name="gesture_kinect" />
 
   <!-- start velocity control node  -->
-  <node pkg="ir_sensors" type="velocity_control" name="velocity_control" output="screen" />
+  <node pkg="ir_sensors" type="velocity_control" name="velocity_control" output="screen">
+      <remap from="velocity_control/vel_cmd_obstacle" to="teleop_velocity_smoother/raw_cmd_vel"/>
+  </node>
 
-  <!-- start velocity smoother node -->
+  <!-- start my home-made velocity smoother node (use the turtlebot one if you can) -->
   <!-- <node pkg="ir_sensors" type="vel_smoother.py" name="vel_smoother" /> -->
 
 </launch>
