@@ -357,7 +357,7 @@ public:
             if (velocity.twist.linear.x < 0){
                 velocity.twist.linear.x = 0;
             }
-            if (velocity.twist.angular.z > 0){
+            if (velocity.twist.angular.z < 0){
                 velocity.twist.angular.z = 0;
             }
         }
@@ -372,7 +372,7 @@ public:
             if (velocity.twist.linear.x < 0){
                 velocity.twist.linear.x = 0;
             }
-            if (velocity.twist.angular.z < 0){
+            if (velocity.twist.angular.z > 0){
                 velocity.twist.angular.z = 0;
             }
         }
