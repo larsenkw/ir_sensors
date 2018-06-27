@@ -76,7 +76,7 @@ public:
         // Receives the number of sensors not maxed out
         sub_num_sensors = nh.subscribe<std_msgs::Int8>("num_sensors", 10, &Server::numSensorsCallback, this);
         // Publishes final velocity command to velocity smoother
-        pub_velocity_command = nh.advertise<geometry_msgs::Twist>("/ir_camera/raw_cmd_vel", 10);
+        pub_velocity_command = nh.advertise<geometry_msgs::Twist>("vel_cmd_obstacle", 10);
 
         following.data = false;
         connection.data = false;
@@ -325,77 +325,77 @@ public:
         }
 
         // Send velocity to obstacle checker
-        pub_velocity_command.publish(velocity.twist);
+        obstacleCheck();
     }
 
-    // // Take calculated velocity and check for obstacles, then publish command
-    // void obstacleCheck()
-    // {
-    //     // Get obstacle param
-    //     std::vector<int> obstacles;
-    //     nh.getParam("obstacles", obstacles);
-    //
-    //     // Check locations of obstacles, if present block motion in that direction
-    //     // Turning left is position, right is negative (right-hand rule)
-    //     // 1: Front Left, block forward motion and left turning
-    //     if (obstacles[0] == 1){
-    //         if (velocity.twist.linear.x > 0){
-    //             velocity.twist.linear.x *= 0.1;
-    //         }
-    //         if (velocity.twist.angular.z > 0){
-    //             velocity.twist.angular.z = 0;
-    //         }
-    //     }
-    //     // 2: Left, block left turning
-    //     if (obstacles[1] == 1){
-    //         if (velocity.twist.angular.z > 0){
-    //             velocity.twist.angular.z = 0;
-    //         }
-    //     }
-    //     // 3: Back Left, block backward motion and left turning
-    //     if (obstacles[2] == 1){
-    //         if (velocity.twist.linear.x < 0){
-    //             velocity.twist.linear.x = 0;
-    //         }
-    //         if (velocity.twist.angular.z < 0){
-    //             velocity.twist.angular.z = 0;
-    //         }
-    //     }
-    //     // 4: Back, block backward motion
-    //     if (obstacles[3] == 1){
-    //         if (velocity.twist.linear.x < 0){
-    //             velocity.twist.linear.x = 0;
-    //         }
-    //     }
-    //     // 5: Back Right, block backward motion and right turning
-    //     if (obstacles[4] == 1){
-    //         if (velocity.twist.linear.x < 0){
-    //             velocity.twist.linear.x = 0;
-    //         }
-    //         if (velocity.twist.angular.z > 0){
-    //             velocity.twist.angular.z = 0;
-    //         }
-    //     }
-    //     // 6: Right, block right turning
-    //     if (obstacles[5] == 1){
-    //         if (velocity.twist.angular.z < 0){
-    //             velocity.twist.angular.z = 0;
-    //         }
-    //     }
-    //     // 7: Front Right, block forward motion and right turning
-    //     if (obstacles[6] == 1){
-    //         if (velocity.twist.linear.x > 0){
-    //             velocity.twist.linear.x *= 0.1;
-    //         }
-    //         if (velocity.twist.angular.z < 0){
-    //             velocity.twist.angular.z = 0;
-    //         }
-    //     }
-    //
-    //     // Publish new velocity command to velocity smoother topic
-    //     pub_velocity_command.publish(velocity.twist);
-    //     //ROS_INFO("Following, lin.x: %f, ang.z: %f, camera: %d, ir: %d", velocity.twist.linear.x, velocity.twist.angular.z, using_camera, using_ir);
-    // }
+    // Take calculated velocity and check for obstacles, then publish command
+    void obstacleCheck()
+    {
+        // Get obstacle param
+        std::vector<int> obstacles;
+        nh.getParam("obstacles", obstacles);
+
+        // Check locations of obstacles, if present block motion in that direction
+        // Turning left is position, right is negative (right-hand rule)
+        // 1: Front Left, block forward motion and left turning
+        if (obstacles[0] == 1){
+            if (velocity.twist.linear.x > 0){
+                velocity.twist.linear.x *= 0.1;
+            }
+            if (velocity.twist.angular.z > 0){
+                velocity.twist.angular.z = 0;
+            }
+        }
+        // 2: Left, block left turning
+        if (obstacles[1] == 1){
+            if (velocity.twist.angular.z > 0){
+                velocity.twist.angular.z = 0;
+            }
+        }
+        // 3: Back Left, block backward motion and left turning
+        if (obstacles[2] == 1){
+            if (velocity.twist.linear.x < 0){
+                velocity.twist.linear.x = 0;
+            }
+            if (velocity.twist.angular.z < 0){
+                velocity.twist.angular.z = 0;
+            }
+        }
+        // 4: Back, block backward motion
+        if (obstacles[3] == 1){
+            if (velocity.twist.linear.x < 0){
+                velocity.twist.linear.x = 0;
+            }
+        }
+        // 5: Back Right, block backward motion and right turning
+        if (obstacles[4] == 1){
+            if (velocity.twist.linear.x < 0){
+                velocity.twist.linear.x = 0;
+            }
+            if (velocity.twist.angular.z > 0){
+                velocity.twist.angular.z = 0;
+            }
+        }
+        // 6: Right, block right turning
+        if (obstacles[5] == 1){
+            if (velocity.twist.angular.z < 0){
+                velocity.twist.angular.z = 0;
+            }
+        }
+        // 7: Front Right, block forward motion and right turning
+        if (obstacles[6] == 1){
+            if (velocity.twist.linear.x > 0){
+                velocity.twist.linear.x *= 0.1;
+            }
+            if (velocity.twist.angular.z < 0){
+                velocity.twist.angular.z = 0;
+            }
+        }
+
+        // Publish new velocity command to velocity smoother topic
+        pub_velocity_command.publish(velocity.twist);
+        //ROS_INFO("Following, lin.x: %f, ang.z: %f, camera: %d, ir: %d", velocity.twist.linear.x, velocity.twist.angular.z, using_camera, using_ir);
+    }
 };
 
 int main(int argc, char **argv)
