@@ -259,7 +259,7 @@ public:
         else {
             velocity.twist.linear.x = 0;
             velocity.twist.angular.z = 0;
-            pub_velocity_command.publish(velocity);
+            pub_velocity_command.publish(velocity.twist);
             //ROS_INFO("Stopped, lin.x: %f, ang.z: %f, camera: %d, ir: %d", velocity.twist.linear.x, velocity.twist.angular.z, using_camera, using_ir);
         }
     }
