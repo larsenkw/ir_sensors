@@ -184,9 +184,12 @@ public:
         catch(tf::TransformException& ex) {
             ROS_ERROR("Cam Transform Exception: %s", ex.what());
             // FIXME: test raw data from camera and IR
+            cout << "Camera after breaking: (" << cam_pose.pose.position.x << "," << cam_pose.pose.position.y << "," << cam_pose.pose.position.z << ")\n";
             cout << "Camera Robot after breaking: (" << cam_pose_robot.pose.position.x << "," << cam_pose_robot.pose.position.y << "," << cam_pose_robot.pose.position.z << ")\n";
-            cout << "Max: (" << cam_d_max_robot.point.x << "," << cam_d_max_robot.point.y << "," << cam_d_max_robot.point.z << ")\n";
-            cout << "Min: (" << cam_d_min_robot.point.x << "," << cam_d_min_robot.point.y << "," << cam_d_min_robot.point.z << ")\n";
+            cout << "Max: (" << cam_d_max.point.x << "," << cam_d_max.point.y << "," << cam_d_max.point.z << ")\n";
+            cout << "Max Robot: (" << cam_d_max_robot.point.x << "," << cam_d_max_robot.point.y << "," << cam_d_max_robot.point.z << ")\n";
+            cout << "Min: (" << cam_d_min.point.x << "," << cam_d_min.point.y << "," << cam_d_min.point.z << ")\n";
+            cout << "Min Robot: (" << cam_d_min_robot.point.x << "," << cam_d_min_robot.point.y << "," << cam_d_min_robot.point.z << ")\n";
             //cam_d_max_robot.pose.position.x = cam_zero_pos_robot.position.x;
         }
     }
