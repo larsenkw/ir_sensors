@@ -183,6 +183,11 @@ public:
         }
         catch(tf::TransformException& ex) {
             ROS_ERROR("Cam Transform Exception: %s", ex.what());
+            // FIXME: test raw data from camera and IR
+            cout << "Camera Robot after breaking: (" << cam_pose_robot.pose.position.x << "," << cam_pose_robot.pose.position.y << "," << cam_pose_robot.pose.position.z << ")\n";
+            cout << "Max: (" << cam_d_max_robot.point.x << "," << cam_d_max_robot.point.y << "," << cam_d_max_robot.point.z << ")\n";
+            cout << "Min: (" << cam_d_min_robot.point.x << "," << cam_d_min_robot.point.y << "," << cam_d_min_robot.point.z << ")\n";
+            //cam_d_max_robot.pose.position.x = cam_zero_pos_robot.position.x;
         }
     }
 
@@ -208,11 +213,10 @@ public:
     // Update current pose when received
     void selectPose()
     {
-
         // FIXME: Using only camera values for testing
         // Check if camera pose is valid, if so, use camera
         if (cam_pose_robot.pose.position.x != cam_zero_pos_robot.point.x) {
-            if ((cam_pose_robot.pose.position.x <= cam_d_max_robot.point.x) and
+            if ((cam_pose_robot.pose.position.x <= cam_d_min_robot.point.x) and
                 (cam_pose_robot.pose.position.x >= cam_d_min_robot.point.x)) {
                 selected_pose = cam_pose_robot;
                 d_max = cam_d_max_robot.point.x;
@@ -229,6 +233,8 @@ public:
             findPerson();
         }
         return;
+        // FIXME: Using only camera values for testing
+
 
         // Check if camera pose is valid, if so, use camera
         if (cam_pose_robot.pose.position.x != cam_zero_pos_robot.point.x) {
