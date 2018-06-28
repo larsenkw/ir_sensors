@@ -153,7 +153,7 @@ public:
     void transformPosesAndPoints(){
         // Transform IR Frame
         ros::Time now = ros::Time::now();
-        listener.waitForTransform("/base_footprint", "/IR_frame", now, ros::Duration(1.0));
+        //listener.waitForTransform("/base_footprint", "/IR_frame", now, ros::Duration(1.0));
         try {
             // Transform Poses
             listener.transformPose("/base_footprint", ir_pose, ir_pose_robot);
@@ -169,7 +169,7 @@ public:
         }
         // Transform Camera Frame
         now = ros::Time::now();
-        listener.waitForTransform("/base_footprint", "/Cam_frame", now, ros::Duration(1.0));
+        //listener.waitForTransform("/base_footprint", "/Cam_frame", now, ros::Duration(1.0));
         try {
             // Transform Poses
             listener.transformPose("/base_footprint", cam_pose, cam_pose_robot);
