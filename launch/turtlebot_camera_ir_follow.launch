@@ -35,12 +35,12 @@
 
 
   <!-- start velocity control node going to turtlebot smoother -->
-  <node pkg="ir_sensors" type="velocity_control" name="velocity_control" output="screen">
+  <!--<node pkg="ir_sensors" type="velocity_control" name="velocity_control" output="screen">
       <remap from="/vel_cmd_obstacle" to="teleop_velocity_smoother/raw_cmd_vel"/>
-  </node>
+  </node>-->
 
   <!-- start velocity control node goint to my smoother -->
-  <!--<node pkg="ir_sensors" type="velocity_control" name="velocity_control" output="screen"/>-->
+  <node pkg="ir_sensors" type="velocity_control" name="velocity_control" output="screen"/>
 
   <!-- start my home-made velocity smoother node (use the turtlebot one if you can) -->
   <node pkg="ir_sensors" type="vel_smoother.py" name="vel_smoother" />
