@@ -33,6 +33,9 @@ private:
     geometry_msgs::PoseStamped ir_pose_robot; // human's pose w.r.t. robot
     geometry_msgs::PoseStamped cam_pose_robot; // human's pose w.r.t. robot
     geometry_msgs::PoseStamped selected_pose; // pose selected by logic function for velocity command
+    geometry_msgs::PoseStamped selected_pose_avg; // Calculated using Exponentially Weight Moving Average
+    geometry_msgs::PoseStamped selected_pose_avg_prev; // Used in recursive EWMA calculation
+    double alpha; // Learning rate parameter for EWMA calculation
     geometry_msgs::TwistStamped velocity; // robot velocity command
     // Method selection variables
     bool using_camera;
@@ -305,6 +308,26 @@ public:
     void velocityCommand(){
         // FIXME: print out selected pose for comparison
         cout << "Selected: (" << selected_pose.pose.position.x << "," << selected_pose.pose.position.y << ")\n";
+
+        // Use Exponentially Weighted Moving Average for pose to smooth out changes
+        if (selected_pose.header.seq <= 1) {
+            selected_pose_avg = selected_pose;
+            selected_pose_avg_prev = selected_pose_avg;
+        }
+        else {
+            selected_pose_avg.header = selected_pose.header;
+            selected_pose_avg.pose.position.x = alpha*selected_pose.pose.position.x + (1 - alpha)*selected_pose_avg_prev.pose.position.x;
+            selected_pose_avg.pose.position.y = alpha*selected_pose.pose.position.y + (1 - alpha)*selected_pose_avg_prev.pose.position.y;
+            selected_pose_avg.pose.position.z = alpha*selected_pose.pose.position.x + (1 - alpha)*selected_pose_avg_prev.pose.position.x;
+            selected_pose_avg.pose.orientation.x = alpha*selected_pose.pose.orientation.x + (1 - alpha)*selected_pose_avg_prev.pose.orientation.x;
+            selected_pose_avg.pose.orientation.y = alpha*selected_pose.pose.orientation.y + (1 - alpha)*selected_pose_avg_prev.pose.orientation.y;
+            selected_pose_avg.pose.orientation.z = alpha*selected_pose.pose.orientation.z + (1 - alpha)*selected_pose_avg_prev.pose.orientation.z;
+            selected_pose_avg.pose.orientation.w = alpha*selected_pose.pose.orientation.w + (1 - alpha)*selected_pose_avg_prev.pose.orientation.w;
+            selected_pose_avg_prev = selected_pose_avg;
+        }
+
+        // Make the EWMA Pose the current selected pose
+        selected_pose = selected_pose_avg;
 
         //----- Linear Velocity -----//
         // Proportional control for velocity
