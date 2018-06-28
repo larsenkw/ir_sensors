@@ -152,9 +152,9 @@ public:
     // Transform all sensor values into the robot frame
     void transformPosesAndPoints(){
         // Transform IR Frame
-        ros::Time now = ros::Time::now();
-        //listener.waitForTransform("/base_footprint", "/IR_frame", now, ros::Duration(1.0));
+        ros::Time now = ros::Time(0);
         try {
+            listener.waitForTransform("/base_footprint", "/IR_frame", now, ros::Duration(1.0));
             // Transform Poses
             listener.transformPose("/base_footprint", ir_pose, ir_pose_robot);
             // Transform Points
@@ -168,9 +168,9 @@ public:
             ROS_ERROR("IR Transform Exception: %s", ex.what());
         }
         // Transform Camera Frame
-        now = ros::Time::now();
-        //listener.waitForTransform("/base_footprint", "/Cam_frame", now, ros::Duration(1.0));
+        now = cam_pose.header.stamp;
         try {
+            listener.waitForTransform("/base_footprint", "/Cam_frame", now, ros::Duration(1.0));
             // Transform Poses
             listener.transformPose("/base_footprint", cam_pose, cam_pose_robot);
             // Transform Points
@@ -235,40 +235,39 @@ public:
             using_ir = false;
             findPerson();
         }
-        return;
         // FIXME: Using only camera values for testing
 
 
-        // Check if camera pose is valid, if so, use camera
-        if (cam_pose_robot.pose.position.x != cam_zero_pos_robot.point.x) {
-            if ((cam_pose_robot.pose.position.x <= cam_d_max_robot.point.x) and
-                (cam_pose_robot.pose.position.x >= cam_d_min_robot.point.x)) {
-                selected_pose = cam_pose_robot;
-                d_max = cam_d_max_robot.point.x;
-                d_min = cam_d_min_robot.point.x;
-                using_camera = true;
-                using_ir = false;
-                ROS_INFO("Camera selected");
-            }
-        }
-        // If camera pose is not value and IR pose is valid, use IR
-        // Checks IR values are within range and at least one sensor is not maxed out
-        else if ((ir_pose_robot.pose.position.x <= ir_d_max_robot.point.x) and
-                 (ir_pose_robot.pose.position.x >= ir_d_min_robot.point.x) and
-                 (num_sensors != 0)) {
-            selected_pose = ir_pose_robot;
-            d_max = ir_d_max_robot.point.x;
-            d_min = ir_d_min_robot.point.x;
-            using_camera = false;
-            using_ir = true;
-            ROS_INFO("IR selected");
-        }
-        // Else search for person.
-        else {
-            using_camera = false;
-            using_ir = false;
-            findPerson();
-        }
+        // // Check if camera pose is valid, if so, use camera
+        // if (cam_pose_robot.pose.position.x != cam_zero_pos_robot.point.x) {
+        //     if ((cam_pose_robot.pose.position.x <= cam_d_max_robot.point.x) and
+        //         (cam_pose_robot.pose.position.x >= cam_d_min_robot.point.x)) {
+        //         selected_pose = cam_pose_robot;
+        //         d_max = cam_d_max_robot.point.x;
+        //         d_min = cam_d_min_robot.point.x;
+        //         using_camera = true;
+        //         using_ir = false;
+        //         ROS_INFO("Camera selected");
+        //     }
+        // }
+        // // If camera pose is not value and IR pose is valid, use IR
+        // // Checks IR values are within range and at least one sensor is not maxed out
+        // else if ((ir_pose_robot.pose.position.x <= ir_d_max_robot.point.x) and
+        //          (ir_pose_robot.pose.position.x >= ir_d_min_robot.point.x) and
+        //          (num_sensors != 0)) {
+        //     selected_pose = ir_pose_robot;
+        //     d_max = ir_d_max_robot.point.x;
+        //     d_min = ir_d_min_robot.point.x;
+        //     using_camera = false;
+        //     using_ir = true;
+        //     ROS_INFO("IR selected");
+        // }
+        // // Else search for person.
+        // else {
+        //     using_camera = false;
+        //     using_ir = false;
+        //     findPerson();
+        // }
     }
 
     // Function for finding the person again (to be implemented in the future)
