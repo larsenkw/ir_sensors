@@ -220,7 +220,7 @@ public:
     void selectPose()
     {
         // FIXME: Using only camera values for testing
-        cout << "---------------------In Select Pose -------------------------\n"
+        cout << "---------------------In Select Pose -------------------------\n";
         cout << "Camera after breaking: (" << cam_pose.pose.position.x << "," << cam_pose.pose.position.y << "," << cam_pose.pose.position.z << ")\n";
         cout << "Camera Robot after breaking: (" << cam_pose_robot.pose.position.x << "," << cam_pose_robot.pose.position.y << "," << cam_pose_robot.pose.position.z << ")\n";
         cout << "Max: (" << cam_d_max.point.x << "," << cam_d_max.point.y << "," << cam_d_max.point.z << ")\n";
