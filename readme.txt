@@ -6,9 +6,16 @@ IR Sensor Package for ROS
 There are currently three nodes in this package required to run the demo. One of these nodes is for reading a phone app which should be merged into the Arduino node once the bluetooth hardware arrives, leaving only two nodes to worry about.
 
 Required files:
+turtlebot_camera_ir_follow.launch
+rosserial_python package for serial_node.py (serial processing node for the Arduino)
 ir_sensor_node_BT_laserscan.ino (Arduino node code)
 ir_data_process.py (data processing code)
 '20-150cm Inverse Plot Data.csv' (data for IR regression function)
+IR_Cam_transforms.launch (transforms between the IR/Camera and robot frames)
+connection_handler.py (allows control with App or Logitech joystick)
+joystick_app_replacement_node.cpp (for sending joystick commands to follow or stop)
+velocity_control.cpp (for calculating velocity from sensor data)
+vel_smoother.py (my velocity smoother, use turtlebot's built-in one first: velocity_smoother.launch.xml)
 
 ================================================================================
 Launch Files
@@ -18,16 +25,96 @@ turtlebot_camera_ir_follow.launch
 
 This launch file is the one that runs the full system. It starts up turtlebot and runs all the other necessary nodes to get the turtlebot following with the IR sensors and the camera.
 
+Transforms Launch File:
+IR_Cam_transforms.launch
+
+This launch file begins a 'tf' node and defines the transforms between the /IR_frame and the /Cam_frame to put the IR and camera data into the robot /base_footprint frame.
+
+velocity_smoother.launch.xml
+
+Turtlebot's built-in velocity smoother. Send your velocity commands to "/teleop_velocity_smoother/raw_cmd_vel" or remap your output to that topic in the launch file (this has already been done in 'turtlebot_camera_ir_follow.launch').
+
 ================================================================================
 Nodes
 ================================================================================
-ir_sensor_node_BT/ir_sensor_node_BT.ino
+connection_handler.py
 
-This is the code that is run on the Arduino and must be uploaded through by using the IDE if not already on the Arduino. Take note of the port that the Arduino is on because you will need to edit that in the '.launch' file if it is different.
+Manages the signals sent to the App and the Logitech controller. If the joystick is available, all it takes is pressing a button or moving an axis to let the program know the controller is connected. There is currently no method of determining if the joystick is no longer connected, so if you unplug it you will need to restart the system to have the connection return to 'false'. To tell the robot to follow press the 'A' button (green). To tell the robot to stop use the 'B' button (red). The Android App establishes a connection and publishes 'true' once the phone is connected. When the phone is disconnected it will publish 'false' (as long as the Logitech controller has not been previously connected). The user can then send follow or stop commands from the phone. This node then passes the connection and following values to the velocity command node to determine whether to stop or calculate the velocity from data.
+
+serial_node.py,
+ir_sensor_node_BT_laserscan/ir_sensor_node_BT_laserscan.ino
+
+This is the code that is run on the Arduino and must be uploaded by using the IDE if not already on the Arduino. Take note of the port that the Arduino is on because you will need to edit that in the '.launch' file if it is different. It is the 'arg' with name 'port'. The default value is '/dev/ttyACM0' and should be changed if the Arduino is on another port. The Arduino should be plugged in first to ensure it is in this location.
+
+joy_node
+
+Node from external package 'joy' which reads the commands from the Logitech controller.
+
+joystick_app_replacement_node
+
+This node interprets the commands from the Logitech controller passed on by 'joy_node' and determines whether the system should be following or stopped and passes these values on to the connection_handler node.
 
 ir_data_process.py
 
 This code subscribes to the raw data sent by the Arduino, processes it, then sends it to the controller as a PoseStamped message. The major structure is the 'IRSensors' object which stores the data and functions used to find the average of the past few data points to dampen noise and compute the pose of the person in front.
+
+velocity_control
+
+This node reads the pose information from the IR sensors and the camera and then calculates the velocity of the robot in the robot frame.
+
+vel_smoother.py
+
+This node takes the raw velocity command and smooths the velocity based on the current velocity and a few set parameters to keep the robot from accelerating too fast.
+
+================================================================================
+Manual Setup Procedure
+================================================================================
+This method is for starting up each node manually if you want to debug or do not want to use the turtlebot_camera_ir_follow.launch file for some reason.
+
+Source the workspace setup.bash file for each new tab
+
+$ ~/[workspace_name]/devel/setup.bash
+i.e.
+$ ~/catkin_ws/devel/setup.bash
+
+Start ROS
+
+$ roscore
+
+Start Turtlebot
+
+$ roslaunch turtlebot_bringup minimal.launch
+
+Begin the serial node for the Arduino
+
+$ rosrun rosserial_python serial_node.py /dev/ttyACM0
+
+Start connection handler
+
+$ rosrun ir_sensors connection_handler.py
+
+Start up joystick
+
+$ joystick_app_replacement.launch
+OR
+$ rosrun joy joy_node
+$ rosrun ir_sensors joystick_app_replacement_node
+
+Start processing IR data
+
+$ rosrun ir_sensors ir_data_process.py
+
+Start processing Camera data
+
+$ rosrun astra_body_tracker astra_body_tracker_node
+$ rosrun python_follower gesture_kinect.py
+
+Start velocity controller and smoother
+
+$ rosrun ir_sensors velocity_control
+$ rosrun ir_sensors vel_smoother.py
+
+Then begin by connecting to the robot with the App or Logitech controller, stand in front, then send the follow command.
 
 ================================================================================
 Adding Custom Messages to Arduino Library
