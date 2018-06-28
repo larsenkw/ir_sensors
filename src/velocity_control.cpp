@@ -126,6 +126,10 @@ public:
         if (sharedPtr != NULL){
             cam_pose = *sharedPtr;
         }
+        else {
+            // No message received
+            cam_pose.pose.position.x = cam_zero_pos.point.x;
+        }
         sharedPtr = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("IR_pose", ros::Duration(1.0));
         if (sharedPtr != NULL){
             ir_pose = *sharedPtr;
