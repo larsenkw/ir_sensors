@@ -208,6 +208,28 @@ public:
     // Update current pose when received
     void selectPose()
     {
+
+        // FIXME: Using only camera values for testing
+        // Check if camera pose is valid, if so, use camera
+        if (cam_pose_robot.pose.position.x != cam_zero_pos_robot.point.x) {
+            if ((cam_pose_robot.pose.position.x <= cam_d_max_robot.point.x) and
+                (cam_pose_robot.pose.position.x >= cam_d_min_robot.point.x)) {
+                selected_pose = cam_pose_robot;
+                d_max = cam_d_max_robot.point.x;
+                d_min = cam_d_min_robot.point.x;
+                using_camera = true;
+                using_ir = false;
+                ROS_INFO("Camera selected");
+            }
+        }
+        // Else search for person.
+        else {
+            using_camera = false;
+            using_ir = false;
+            findPerson();
+        }
+        return;
+
         // Check if camera pose is valid, if so, use camera
         if (cam_pose_robot.pose.position.x != cam_zero_pos_robot.point.x) {
             if ((cam_pose_robot.pose.position.x <= cam_d_max_robot.point.x) and
