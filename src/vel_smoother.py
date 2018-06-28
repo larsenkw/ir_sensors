@@ -10,9 +10,11 @@ class Server(object):
         # Velocity smoothing parameters (be sure to make these values floats by adding a decimal point)
         self.smoothing = smoothing
         self.frequency = 60. # Hz
-        self.max_accel_lin = 0.5 # m/s^2
+        self.max_accel_lin_forward = 0.5 # m/s^2
+        self.max_accel_lin_backward = 1.5 # m/s^2
         self.max_accel_ang = 1. # rad/s^2
-        self.delta_v_lin = self.max_accel_lin/self.frequency # maximum change in velocity since previous command
+        self.delta_v_lin_forward = self.max_accel_lin_forward/self.frequency # maximum change in velocity since previous command
+        self.delta_v_lin_backward = self.max_accel_lin_backward/self.frequency # maximum change in velocity for reverse motion
         self.delta_v_ang = self.max_accel_ang/self.frequency # maximum change in angular velocity
         self.command_Twist = Twist()
         self.command_Twist.linear.x = 0.
@@ -28,20 +30,27 @@ class Server(object):
         self.command_Twist = msg
 
     def callback_vel_smoother(self, msg):
-        # Linear Smoothing
+        #----- Linear Smoothing -----#
         self.previous_Twist.linear.x = msg.linear.x
-        # Command is within lower limit
-        if (self.command_Twist.linear.x >= self.previous_Twist.linear.x - self.delta_v_lin):
+        # Acceleration Forward
+        if (self.previous_Twist.linear.x <= self.command_Twist.linear.x):
             # Command is above upper limit
-            if (self.command_Twist.linear.x > self.previous_Twist.linear.x + self.delta_v_lin):
-                self.smoothed_Twist.linear.x = self.previous_Twist.linear.x + self.delta_v_lin
+            if (self.command_Twist.linear.x > self.previous_Twist.linear.x + self.delta_v_lin_forward):
+                self.smoothed_Twist.linear.x = self.previous_Twist.linear.x + self.delta_v_lin_forward
             else:
                 # Command is within range
                 self.smoothed_Twist.linear.x = self.command_Twist.linear.x
-        # Command is below lower limit
+        # Decceleration.
         else:
-            self.smoothed_Twist.linear.x = self.previous_Twist.linear.x - self.delta_v_lin
-        # Angular Smoothing (same logic as above)
+            # Command is below lower limit
+            if (self.command_Twist.linear.x < self.previous_Twist.linear.x - self.delta_v_lin_backward):
+                self.smoothed_Twist.linear.x = self.previous_Twist.linear.x - self.delta_v_lin_backward
+            else:
+                # Command is within range
+                self.smoothed_Twist.linear.x = self.command_Twist.linear.x
+
+
+        #----- Angular Smoothing (same logic as above) -----#
         self.previous_Twist.angular.z = msg.angular.z
         if (self.command_Twist.angular.z >= self.previous_Twist.angular.z - self.delta_v_ang):
             if (self.command_Twist.angular.z > self.previous_Twist.angular.z + self.delta_v_ang):
