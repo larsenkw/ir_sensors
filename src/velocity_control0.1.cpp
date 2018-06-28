@@ -88,6 +88,7 @@ public:
         using_camera = true;
         using_ir = false;
         ir_d_offset = 0.90;
+
         // Set min and max points in sensor frames
         ir_d_max.header.frame_id = "IR_frame";
         ir_d_max.point.x = 0.0;
@@ -112,6 +113,7 @@ public:
         cam_zero_pos.point.y = 0;
         cam_zero_pos.point.z = 0;
         cam_delta = 0.10;
+
         // Common values
         d_offset = 0.90; // m
         delta = 0.10; // m
@@ -120,6 +122,7 @@ public:
         k_lin_reverse = 1.0;
         k_ang = 2;
         num_sensors = 0;
+        alpha = 0.7;
     }
 
     void controlLoop() {
