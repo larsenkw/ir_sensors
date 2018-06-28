@@ -89,20 +89,23 @@ class IRSensors(object):
         self.iter_val = 0
         self.seq = 0
 
+        # Learning Rate for Exponentially Weighted Moving Average
+        self.alpha = 0.7
+
         self.num_sensors = 15
-        self.values_analog = [np.array([])]
+        self.analog_arr = [np.array([])]
         self.distances = [0]
-        self.values_m = [np.array([])]
-        self.values_avg = [0]
+        self.distances_arr = [np.array([])]
+        self.analog_avg = [0]
         self.distances_avg = [0]
-        self.valuesavg_m = [np.array([])]
+        self.distances_avg_arr = [np.array([])]
         for i in range(self.num_sensors-1):
-            self.values_analog.append(np.array([]))
+            self.analog_arr.append(np.array([]))
             self.distances.append(0)
-            self.values_m.append(np.array([]))
-            self.values_avg.append(0)
+            self.distances_arr.append(np.array([]))
+            self.analog_avg.append(0)
             self.distances_avg.append(0)
-            self.valuesavg_m.append(np.array([]))
+            self.distances_avg_arr.append(np.array([]))
 
         # FIXME: Test setting param
         obstacles = [0,0,0,0,0,0,0]
@@ -113,19 +116,25 @@ class IRSensors(object):
         rospy.set_param('obstacles', obstacles)
 
     def rawDataToDistance(self, data):
-        self.values = list(data)
-        for i in range(len(self.values)):
+        self.analog = list(data)
+        for i in range(len(self.analog)):
             #--- Convert data to int
-            self.values[i] = int(self.values[i])
+            self.analog[i] = int(self.analog[i])
             #--- Store analog value
-            self.values_analog[i] = np.append(self.values_analog[i][-self.store_len:], self.values[i])
+            self.analog_arr[i] = np.append(self.analog_arr[i][-self.store_len:], self.analog[i])
             #--- Convert to distance (cm) and store
-            self.distances[i] = self.analogToDistance(self.values[i])
-            self.values_m[i] = np.append(self.values_m[i][-self.store_len:], self.distances[i])
+            self.distances[i] = self.analogToDistance(self.analog[i])
+            self.distances_arr[i] = np.append(self.distances_arr[i][-self.store_len:], self.distances[i])
             #--- Calculate average over window
-            self.values_avg[i] = np.mean(self.values_analog[i][-self.window_len:])
-            self.distances_avg[i] = np.mean(self.values_m[i][-self.window_len:])
-            self.valuesavg_m[i] = np.append(self.valuesavg_m[i][-self.store_len:], self.distances_avg[i])
+            self.analog_avg[i] = np.mean(self.analog_arr[i][-self.window_len:])
+            # Get average distance using plain moving average
+            #self.distances_avg[i] = np.mean(self.distances_arr[i][-self.window_len:])
+            # Getaverage distance using exponetially weighted moving average (EWMA)
+            if (len(self.distances_arr[i]) <= 1):
+                self.distances_avg[i] = self.distances[i]
+            else:
+                self.distances_avg[i] = self.alpha*self.distances[i] + (1 - self.alpha)*self.distances_avg_arr[i][-1]
+            self.distances_avg_arr[i] = np.append(self.distances_avg_arr[i][-self.store_len:], self.distances_avg[i])
         return self.distances_avg
 
     def distanceToPose(self, data_avg, header):

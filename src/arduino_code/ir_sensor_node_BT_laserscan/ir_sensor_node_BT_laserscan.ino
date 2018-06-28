@@ -134,7 +134,7 @@ void loop(){
   // Write and send message
   //ir_scan.ranges = data;
   ir_scan.header.stamp = nh.now();
-  ir_scan.header.frame_id = "IR Range Data";
+  ir_scan.header.frame_id = "IR_frame";
   ir_raw_data.publish(&ir_scan);
 
   // Read Bluetooth Data and Status
