@@ -190,6 +190,9 @@ public:
             cout << "Max Robot: (" << cam_d_max_robot.point.x << "," << cam_d_max_robot.point.y << "," << cam_d_max_robot.point.z << ")\n";
             cout << "Min: (" << cam_d_min.point.x << "," << cam_d_min.point.y << "," << cam_d_min.point.z << ")\n";
             cout << "Min Robot: (" << cam_d_min_robot.point.x << "," << cam_d_min_robot.point.y << "," << cam_d_min_robot.point.z << ")\n";
+            cout << "Zero: (" << cam_zero_pos.point.x << "," << cam_zero_pos.point.y << "," << cam_zero_pos.point.z << ")\n";
+            cout << "Zero Robot: (" << cam_zero_pos_robot.point.x << "," << cam_zero_pos_robot.point.y << "," << cam_zero_pos_robot.point.z << ")\n";
+
             //cam_d_max_robot.pose.position.x = cam_zero_pos_robot.position.x;
         }
     }
