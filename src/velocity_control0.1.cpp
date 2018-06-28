@@ -231,7 +231,7 @@ public:
         cout << "Zero Robot: (" << cam_zero_pos_robot.point.x << "," << cam_zero_pos_robot.point.y << "," << cam_zero_pos_robot.point.z << ")\n";
         // Check if camera pose is valid, if so, use camera
         if (cam_pose_robot.pose.position.x != cam_zero_pos_robot.point.x) {
-            if ((cam_pose_robot.pose.position.x <= cam_d_min_robot.point.x) and
+            if ((cam_pose_robot.pose.position.x <= cam_d_max_robot.point.x) and
                 (cam_pose_robot.pose.position.x >= cam_d_min_robot.point.x)) {
                 selected_pose = cam_pose_robot;
                 d_max = cam_d_max_robot.point.x;
