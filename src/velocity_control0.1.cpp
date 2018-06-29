@@ -194,6 +194,11 @@ public:
             cam_pose.pose.orientation.w = 1;
         }
 
+        //FIXME: Print message when the pose is 0
+        if (cam_pose.pose.position.x == 0) {
+            cout << "Pose is 0!!" << endl;
+        }
+
         boost::shared_ptr<geometry_msgs::PoseStamped const> sharedPtr_ir;
         sharedPtr_ir = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("IR_pose", ros::Duration(1.0));
         if (sharedPtr_ir != NULL){
