@@ -3,6 +3,7 @@
 #include "geometry_msgs/Twist.h"
 #include "geometry_msgs/TwistStamped.h"
 #include "geometry_msgs/PointStamped.h"
+#include "body_tracker_msgs/Skeleton.h"
 #include "std_msgs/Bool.h"
 #include "std_msgs/String.h"
 #include "std_msgs/Int8.h"
@@ -23,6 +24,8 @@ private:
     ros::Subscriber sub_command;
     ros::Subscriber sub_num_sensors;
     ros::Publisher pub_velocity_command;
+    ros::Publisher pub_follow_person;
+    ros::Publisher pub_obstacle_person;
     tf::TransformListener listener;
     // Message variables
     std_msgs::Bool following; // indicates whether phone app says to follow
@@ -37,6 +40,8 @@ private:
     geometry_msgs::PoseStamped selected_pose_avg_prev; // Used in recursive EWMA calculation
     double alpha; // Learning rate parameter for EWMA calculation
     geometry_msgs::TwistStamped velocity; // robot velocity command
+    body_tracker_msgs::Skeleton cam_skeleton;
+    int body_id;
     // Method selection variables
     bool using_camera;
     bool using_ir;
@@ -80,6 +85,10 @@ public:
         sub_num_sensors = nh.subscribe<std_msgs::Int8>("num_sensors", 10, &Server::numSensorsCallback, this);
         // Publishes final velocity command to velocity smoother
         pub_velocity_command = nh.advertise<geometry_msgs::Twist>("vel_cmd_obstacle", 10);
+        // Publishes the skeleton for the person we are following
+        pub_follow_person = nh.advertise<body_tracker_msgs::Skeleton>("follow_person", 10);
+        // Publishes the skeleton of the people who are obstacles
+        pub_obstacle_person = nh.advertise<body_tracker_msgs::Skeleton>("obstacle_person", 10);
 
         following.data = false;
         connection.data = false;
@@ -127,18 +136,41 @@ public:
 
     void controlLoop() {
         // Get poses from IR sensors and camera
-        boost::shared_ptr<geometry_msgs::PoseStamped const> sharedPtr;
-        sharedPtr = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("camera_pose", ros::Duration(1.0));
-        if (sharedPtr != NULL){
-            cam_pose = *sharedPtr;
+        // boost::shared_ptr<geometry_msgs::PoseStamped const> sharedPtr;
+        // sharedPtr = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("camera_pose", ros::Duration(1.0));
+        // if (sharedPtr != NULL){
+        //     cam_pose = *sharedPtr;
+        // }
+        // else {
+        //     // No message received
+        //     cam_pose.pose.position.x = cam_zero_pos.point.x;
+        // }
+
+        // Grabbing body_tracker/skeleton message instead of pose
+        boost::shared_ptr<body_tracker_msgs::Skeleton const> sharedPtr_cam;
+        sharedPtr_cam = ros::topic::waitForMessage<body_tracker_msgs::Skeleton>("/body_tracker/skeleton", ros::Duration(1.0));
+        if (sharedPtr_cam != NULL) {
+            cam_skeleton = *sharedPtr_cam;
+            if (body_id != cam_skeleton.body_id) {
+                if (using_ir) { // we lost the person, but they got close enough to be in the IR range, set new ID when they come back into view
+                    body_id = cam_skeleton.body_id;
+                }
+                else { // this person is an obstacle
+                    pub_obstacle_person.publish(cam_skeleton);
+                }
+            }
+            else { // the body_id matches
+                cam_pose.pose.position.x = cam_skeleton.joint_position_spine_mid.x;
+                cam_pose.pose.position.y = cam_skeleton.joint_position_spine_mid.y;
+                cam_pose.pose.position.z = cam_skeleton.joint_position_spine_mid.z;
+                pub_follow_person.publish(cam_skeleton);
+            }
         }
-        else {
-            // No message received
-            cam_pose.pose.position.x = cam_zero_pos.point.x;
-        }
-        sharedPtr = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("IR_pose", ros::Duration(1.0));
-        if (sharedPtr != NULL){
-            ir_pose = *sharedPtr;
+
+        boost::shared_ptr<geometry_msgs::PoseStamped const> sharedPtr_ir;
+        sharedPtr_ir = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("IR_pose", ros::Duration(1.0));
+        if (sharedPtr_ir != NULL){
+            ir_pose = *sharedPtr_ir;
         }
 
         // FIXME: test raw data from camera and IR
@@ -207,19 +239,19 @@ public:
     void followingCallback(const std_msgs::Bool::ConstPtr &msg)
     {
         following.data = msg->data;
-        followCommand();
+        //followCommand();
     }
     // Update connection status when new command received
     void connectionCallback(const std_msgs::Bool::ConstPtr &msg)
     {
         connection.data = msg->data;
-        followCommand();
+        //followCommand();
     }
     // Update command status when new command received
     void commandCallback(const std_msgs::String::ConstPtr &msg)
     {
         command.data = msg->data;
-        followCommand();
+        //followCommand();
     }
 
     // Update current pose when received
