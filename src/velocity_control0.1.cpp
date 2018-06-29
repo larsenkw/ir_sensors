@@ -173,6 +173,7 @@ public:
                 cam_pose.pose.position.x = cam_skeleton.joint_position_spine_mid.x;
                 cam_pose.pose.position.y = cam_skeleton.joint_position_spine_mid.y;
                 cam_pose.pose.position.z = cam_skeleton.joint_position_spine_mid.z;
+                cam_pose.pose.orientation.w = 1;
                 pub_follow_person.publish(cam_skeleton);
 
                 cout << "Updating following skeleton\n";
