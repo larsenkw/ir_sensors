@@ -149,7 +149,7 @@ public:
 
         // Grabbing body_tracker/skeleton message instead of pose
         boost::shared_ptr<body_tracker_msgs::Skeleton const> sharedPtr_cam;
-        sharedPtr_cam = ros::topic::waitForMessage<body_tracker_msgs::Skeleton>("/body_tracker/skeleton", ros::Duration(1.0));
+        sharedPtr_cam = ros::topic::waitForMessage<body_tracker_msgs::Skeleton>("/body_tracker/skeleton", ros::Duration(0.1));
         if (sharedPtr_cam != NULL) {
             cam_skeleton = *sharedPtr_cam;
             cout << "Body_id: " << body_id << endl;
@@ -200,7 +200,7 @@ public:
         }
 
         boost::shared_ptr<geometry_msgs::PoseStamped const> sharedPtr_ir;
-        sharedPtr_ir = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("IR_pose", ros::Duration(1.0));
+        sharedPtr_ir = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("IR_pose", ros::Duration(0.1));
         if (sharedPtr_ir != NULL){
             ir_pose = *sharedPtr_ir;
         }
