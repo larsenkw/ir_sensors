@@ -132,6 +132,7 @@ public:
         k_ang = 2;
         num_sensors = 0;
         alpha = 0.7;
+        body_id = -1;
     }
 
     void controlLoop() {
@@ -151,12 +152,19 @@ public:
         sharedPtr_cam = ros::topic::waitForMessage<body_tracker_msgs::Skeleton>("/body_tracker/skeleton", ros::Duration(1.0));
         if (sharedPtr_cam != NULL) {
             cam_skeleton = *sharedPtr_cam;
+            if (body_id == -1) {
+                body_id = cam_skeleton.body_id;
+            }
             if (body_id != cam_skeleton.body_id) {
                 if (using_ir) { // we lost the person, but they got close enough to be in the IR range, set new ID when they come back into view
                     body_id = cam_skeleton.body_id;
+
+                    cout << "Updating body id\n";
                 }
                 else { // this person is an obstacle
                     pub_obstacle_person.publish(cam_skeleton);
+
+                    cout << "Sending obstacle skeleton\n";
                 }
             }
             else { // the body_id matches
@@ -164,11 +172,10 @@ public:
                 cam_pose.pose.position.y = cam_skeleton.joint_position_spine_mid.y;
                 cam_pose.pose.position.z = cam_skeleton.joint_position_spine_mid.z;
                 pub_follow_person.publish(cam_skeleton);
+
+                cout << "Updating following skeleton\n";
             }
         }
-
-        cout << "cam_pose: ()" << cam_pose.pose.position.x << "," << cam_pose.pose.position.y << "," << cam_pose.pose.position.z << ")\n";
-        cout << "body_id: " << body_id << endl;
 
         boost::shared_ptr<geometry_msgs::PoseStamped const> sharedPtr_ir;
         sharedPtr_ir = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("IR_pose", ros::Duration(1.0));
@@ -177,6 +184,7 @@ public:
         }
 
         // FIXME: test raw data from camera and IR
+        cout << "body_id: " << body_id << endl;
         cout << "Camera raw: (" << cam_pose.pose.position.x << "," << cam_pose.pose.position.y << "," << cam_pose.pose.position.z << ")\n";
         cout << "IR raw: (" << ir_pose.pose.position.x << "," << ir_pose.pose.position.y << "," << ir_pose.pose.position.z << ")\n";
 
@@ -224,15 +232,15 @@ public:
         }
         catch(tf::TransformException& ex) {
             ROS_ERROR("Cam Transform Exception: %s", ex.what());
-            // FIXME: test raw data from camera and IR
-            cout << "Camera after breaking: (" << cam_pose.pose.position.x << "," << cam_pose.pose.position.y << "," << cam_pose.pose.position.z << ")\n";
-            cout << "Camera Robot after breaking: (" << cam_pose_robot.pose.position.x << "," << cam_pose_robot.pose.position.y << "," << cam_pose_robot.pose.position.z << ")\n";
-            cout << "Max: (" << cam_d_max.point.x << "," << cam_d_max.point.y << "," << cam_d_max.point.z << ")\n";
-            cout << "Max Robot: (" << cam_d_max_robot.point.x << "," << cam_d_max_robot.point.y << "," << cam_d_max_robot.point.z << ")\n";
-            cout << "Min: (" << cam_d_min.point.x << "," << cam_d_min.point.y << "," << cam_d_min.point.z << ")\n";
-            cout << "Min Robot: (" << cam_d_min_robot.point.x << "," << cam_d_min_robot.point.y << "," << cam_d_min_robot.point.z << ")\n";
-            cout << "Zero: (" << cam_zero_pos.point.x << "," << cam_zero_pos.point.y << "," << cam_zero_pos.point.z << ")\n";
-            cout << "Zero Robot: (" << cam_zero_pos_robot.point.x << "," << cam_zero_pos_robot.point.y << "," << cam_zero_pos_robot.point.z << ")\n";
+            // // FIXME: test raw data from camera and IR
+            // cout << "Camera after breaking: (" << cam_pose.pose.position.x << "," << cam_pose.pose.position.y << "," << cam_pose.pose.position.z << ")\n";
+            // cout << "Camera Robot after breaking: (" << cam_pose_robot.pose.position.x << "," << cam_pose_robot.pose.position.y << "," << cam_pose_robot.pose.position.z << ")\n";
+            // cout << "Max: (" << cam_d_max.point.x << "," << cam_d_max.point.y << "," << cam_d_max.point.z << ")\n";
+            // cout << "Max Robot: (" << cam_d_max_robot.point.x << "," << cam_d_max_robot.point.y << "," << cam_d_max_robot.point.z << ")\n";
+            // cout << "Min: (" << cam_d_min.point.x << "," << cam_d_min.point.y << "," << cam_d_min.point.z << ")\n";
+            // cout << "Min Robot: (" << cam_d_min_robot.point.x << "," << cam_d_min_robot.point.y << "," << cam_d_min_robot.point.z << ")\n";
+            // cout << "Zero: (" << cam_zero_pos.point.x << "," << cam_zero_pos.point.y << "," << cam_zero_pos.point.z << ")\n";
+            // cout << "Zero Robot: (" << cam_zero_pos_robot.point.x << "," << cam_zero_pos_robot.point.y << "," << cam_zero_pos_robot.point.z << ")\n";
 
             //cam_d_max_robot.pose.position.x = cam_zero_pos_robot.position.x;
         }
