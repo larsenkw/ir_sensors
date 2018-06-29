@@ -183,6 +183,16 @@ public:
                 cout << "Updating following skeleton\n";
             }
         }
+        else {
+            cam_pose.header.frame_id = "Cam_frame";
+            cam_pose.pose.position.x = 0;
+            cam_pose.pose.position.y = 0;
+            cam_pose.pose.position.z = 0;
+            cam_pose.pose.orientation.x = 0;
+            cam_pose.pose.orientation.y = 0;
+            cam_pose.pose.orientation.z = 0;
+            cam_pose.pose.orientation.w = 1;
+        }
 
         boost::shared_ptr<geometry_msgs::PoseStamped const> sharedPtr_ir;
         sharedPtr_ir = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("IR_pose", ros::Duration(1.0));
