@@ -167,6 +167,9 @@ public:
             }
         }
 
+        cout << "cam_pose: ()" << cam_pose.pose.position.x << "," << cam_pose.pose.position.y << "," << cam_pose.pose.position.z << ")\n";
+        cout << "body_id: " << body_id << endl;
+
         boost::shared_ptr<geometry_msgs::PoseStamped const> sharedPtr_ir;
         sharedPtr_ir = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("IR_pose", ros::Duration(1.0));
         if (sharedPtr_ir != NULL){
