@@ -152,8 +152,8 @@ public:
         sharedPtr_cam = ros::topic::waitForMessage<body_tracker_msgs::Skeleton>("/body_tracker/skeleton", ros::Duration(1.0));
         if (sharedPtr_cam != NULL) {
             cam_skeleton = *sharedPtr_cam;
-            cout << "Body_id: " << body_id;
-            cout << "Skeleton_id: " << cam_skeleton.body_id;
+            cout << "Body_id: " << body_id << endl;
+            cout << "Skeleton_id: " << cam_skeleton.body_id << endl;
             if (body_id == -1) {
                 body_id = cam_skeleton.body_id;
             }
