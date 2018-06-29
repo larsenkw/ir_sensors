@@ -170,9 +170,13 @@ public:
                 }
             }
             else { // the body_id matches
+                cam_pose.header.frame_id = "Cam_frame";
                 cam_pose.pose.position.x = cam_skeleton.joint_position_spine_mid.x;
                 cam_pose.pose.position.y = cam_skeleton.joint_position_spine_mid.y;
                 cam_pose.pose.position.z = cam_skeleton.joint_position_spine_mid.z;
+                cam_pose.pose.orientation.x = 0;
+                cam_pose.pose.orientation.y = 0;
+                cam_pose.pose.orientation.z = 0;
                 cam_pose.pose.orientation.w = 1;
                 pub_follow_person.publish(cam_skeleton);
 
