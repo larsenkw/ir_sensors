@@ -250,12 +250,17 @@ pub_num_sensors = rospy.Publisher('num_sensors', Int8, queue_size = 10)
 pub_rotation_dir = rospy.Publisher('rotation_direction', Int8, queue_size = 10)
 pub_ir_pose = rospy.Publisher('IR_pose', PoseStamped, queue_size = 10)
 pub_ir_other_sensors_distance = rospy.Publisher('ir_other_sensors_distance', LaserScan, queue_size = 10)
+pub_ir_distance_debug = rospy.Publisher("ir_distance_debug", LaserScan, queue_size = 10)
 
 def callback(msg, ir_sensors):
     # Receive raw data and publish a value
     # The raw_data variable should be an array of numbers
     raw_data = msg.ranges
     distances_avg = ir_sensors.rawDataToDistance(raw_data)
+    distances_laserscan = LaserScan()
+    distances_laserscan.header = msg.header
+    distances_laserscan.ranges = distances_avg
+    pub_ir_distance_debug.publish(distances_laserscan)
     front_distances = distances_avg[0:6]
     obstacle_distances = distances_avg[6:]
     theta_p, distance, num_sensors, rotation_direction, pose = ir_sensors.distanceToPose(front_distances, msg.header) # only take first 6 distances, those rorrespond to the front sensors
