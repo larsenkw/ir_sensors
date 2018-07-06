@@ -147,9 +147,9 @@ public:
         // Get poses from IR sensors and camera
 
         // FIXME: print timing messages
-        std::clock_t start = std::clock();
         cout << "==============================================================\n";
         cout << "Timing messages\n";
+        std::clock_t start = std::clock();
         cout << "pre-get camera: " << 0 << "ms\n";
 
         // Grabbing pose from /camera_pose topic from Kinect data
@@ -216,6 +216,10 @@ public:
         //     cam_pose.pose.orientation.w = 1;
         // }
 
+        //FIXME: print timing messages
+        start = std::clock();
+        cout << "pre-get ir: " << 0 << "ms\n";
+
         // Grab pose from IR data
         boost::shared_ptr<geometry_msgs::PoseStamped const> sharedPtr_ir;
         sharedPtr_ir = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("IR_pose", ros::Duration(0.1));
@@ -226,6 +230,10 @@ public:
         else {
             cout << "No IR message.\n";
         }
+
+        //FIXME: print timing messages
+        end = std::clock();
+        cout << "post-get ir: " << setprecision(6) << 1000.0 * (end - start) / CLOCKS_PER_SEC << "ms\n";
 
         // FIXME: test raw data from camera and IR
         cout << "body_id: " << body_id << endl;
@@ -241,6 +249,10 @@ public:
         // Run follow command function to process newly selected pose
         followCommand();
     }
+
+    //FIXME: print timing messages
+    start = std::clock();
+    cout << "pre-cam transform: " << 0 << "ms\n";
 
     // Transform all sensor values into the robot frame
     void transformPosesAndPoints(){
@@ -272,6 +284,15 @@ public:
 
             //cam_d_max_robot.pose.position.x = cam_zero_pos_robot.position.x;
         }
+
+        //FIXME: print timing messages
+        end = std::clock();
+        cout << "post-cam transform: " << setprecision(6) << 1000.0 * (end - start) / CLOCKS_PER_SEC << "ms\n";
+
+        //FIXME: print timing messages
+        start = std::clock();
+        cout << "pre-ir transform: " << 0 << "ms\n";
+
         // Transform IR Frame
         now = ros::Time(0);
         try {
@@ -288,6 +309,10 @@ public:
         catch(tf::TransformException& ex) {
             ROS_ERROR("IR Transform Exception: %s", ex.what());
         }
+
+        //FIXME: print timing messages
+        end = std::clock();
+        cout << "post-ir transform: " << setprecision(6) << 1000.0 * (end - start) / CLOCKS_PER_SEC << "ms\n";
     }
 
     // Update following status when new command received
