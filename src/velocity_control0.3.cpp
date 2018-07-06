@@ -153,6 +153,7 @@ public:
         else {
             // No message received
             cam_pose.pose.position.x = cam_zero_pos.point.x;
+            cout << "No camera message.\n";
         }
 
         // // Grabbing body_tracker/skeleton message instead of pose
@@ -166,7 +167,7 @@ public:
         //         body_id = cam_skeleton.body_id;
         //     }
         //     if (body_id != cam_skeleton.body_id) {
-        //         if (using_ir) { // we lost the person, but they got close enough to be in the IR range, set new ID when they come back into view
+        //         if (using_ir) { // we lost the peson, but they got close enough to be in the IR range, set new ID when they come back into view
         //             body_id = cam_skeleton.body_id;
         //
         //             cout << "Updating body id\n";
@@ -202,16 +203,15 @@ public:
         //     cam_pose.pose.orientation.w = 1;
         // }
 
-        //FIXME: Print message when the pose is 0
-        if (cam_pose.pose.position.x == 0) {
-            cout << "Pose is 0!!" << endl;
-        }
-
         // Grab pose from IR data
         boost::shared_ptr<geometry_msgs::PoseStamped const> sharedPtr_ir;
-        sharedPtr_ir = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("IR_pose", ros::Duration(0.1));
+        sharedPtr_ir = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("IR_pose", ros::Duration(1.0));
+
         if (sharedPtr_ir != NULL){
             ir_pose = *sharedPtr_ir;
+        }
+        else {
+            cout << "No IR message.\n";
         }
 
         // FIXME: test raw data from camera and IR
@@ -231,24 +231,8 @@ public:
 
     // Transform all sensor values into the robot frame
     void transformPosesAndPoints(){
-        // Transform IR Frame
-        ros::Time now = ros::Time(0);
-        try {
-            listener.waitForTransform("/base_footprint", "/IR_frame", now, ros::Duration(1.0));
-            // Transform Poses
-            listener.transformPose("/base_footprint", ir_pose, ir_pose_robot);
-            // Transform Points
-            listener.transformPoint("/base_footprint", ir_d_max, ir_d_max_robot);
-            listener.transformPoint("/base_footprint", ir_d_min, ir_d_min_robot);
-
-            // FIXME: print out ir pose in robot frame
-            cout << "IR: (" << ir_pose_robot.pose.position.x << "," << ir_pose_robot.pose.position.y << ")\n";
-        }
-        catch(tf::TransformException& ex) {
-            ROS_ERROR("IR Transform Exception: %s", ex.what());
-        }
         // Transform Camera Frame
-        now = cam_pose.header.stamp;
+        ros::Time now = cam_pose.header.stamp;
         try {
             listener.waitForTransform("/base_footprint", "/Cam_frame", now, ros::Duration(1.0));
             // Transform Poses
@@ -274,6 +258,22 @@ public:
             // cout << "Zero Robot: (" << cam_zero_pos_robot.point.x << "," << cam_zero_pos_robot.point.y << "," << cam_zero_pos_robot.point.z << ")\n";
 
             //cam_d_max_robot.pose.position.x = cam_zero_pos_robot.position.x;
+        }
+        // Transform IR Frame
+        now = ros::Time(0);
+        try {
+            listener.waitForTransform("/base_footprint", "/IR_frame", now, ros::Duration(1.0));
+            // Transform Poses
+            listener.transformPose("/base_footprint", ir_pose, ir_pose_robot);
+            // Transform Points
+            listener.transformPoint("/base_footprint", ir_d_max, ir_d_max_robot);
+            listener.transformPoint("/base_footprint", ir_d_min, ir_d_min_robot);
+
+            // FIXME: print out ir pose in robot frame
+            cout << "IR: (" << ir_pose_robot.pose.position.x << "," << ir_pose_robot.pose.position.y << ")\n";
+        }
+        catch(tf::TransformException& ex) {
+            ROS_ERROR("IR Transform Exception: %s", ex.what());
         }
     }
 

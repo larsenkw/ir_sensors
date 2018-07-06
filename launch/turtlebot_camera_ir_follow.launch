@@ -32,7 +32,7 @@
   <include file="$(find skeleton_markers)/launch/markers.launch" />
 
   <!-- node for grabbing the skeleton pose and republishing in correct format -->
-  <node pkg="python_follower" type="gesture_kinect.py" name="gesture_kinect" />
+  <node pkg="python_follower" type="gesture_kinect.py" name="gesture_kinect" output="screen"/>
 
 
   <!-- start velocity control node going to turtlebot smoother -->
