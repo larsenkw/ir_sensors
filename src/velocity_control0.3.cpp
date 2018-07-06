@@ -287,7 +287,7 @@ public:
         }
 
         //FIXME: print timing messages
-        end = std::clock();
+        std::clock_t end = std::clock();
         cout << "post-cam transform: " << setprecision(6) << 1000.0 * (end - start) / CLOCKS_PER_SEC << "ms\n";
 
         //FIXME: print timing messages
