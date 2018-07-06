@@ -250,12 +250,13 @@ public:
         followCommand();
     }
 
-    //FIXME: print timing messages
-    start = std::clock();
-    cout << "pre-cam transform: " << 0 << "ms\n";
-
     // Transform all sensor values into the robot frame
     void transformPosesAndPoints(){
+
+        //FIXME: print timing messages
+        std::clock_t start = std::clock();
+        cout << "pre-cam transform: " << 0 << "ms\n";
+
         // Transform Camera Frame
         ros::Time now = cam_pose.header.stamp;
         try {
