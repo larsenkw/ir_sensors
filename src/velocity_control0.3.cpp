@@ -222,7 +222,7 @@ public:
 
         // Grab pose from IR data
         boost::shared_ptr<geometry_msgs::PoseStamped const> sharedPtr_ir;
-        sharedPtr_ir = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("IR_pose", ros::Duration(0.1));
+        sharedPtr_ir = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("IR_pose", ros::Duration(1.0));
 
         if (sharedPtr_ir != NULL){
             ir_pose = *sharedPtr_ir;
