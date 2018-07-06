@@ -1,6 +1,6 @@
 /*
- * This code is for reading distance using a Sharp 0A41SK0F IR Distance sensor
- * Unit measures between 4 and 30 cm
+ * This code is for reading distance using a Sharp GP2Y0A02YK0F IR Distance sensor
+ * Unit measures between 20 and 150 cm
  * This file now includes code for operating the HC-05 Bluetooth board with 
  * the Arduino for interfacing with an Android phone app.
  *
@@ -156,7 +156,9 @@ void loop(){
   bt_connection.publish(&connection);
 
   nh.spinOnce();
-  delay(50);
+  // IR sensors refresh at 38.3ms, this delay can be smaller because it takes more time to process
+  // the rest of the code. Max rate is about 30Hz.
+  delay(30);
 }
 
 void stopSignal() {

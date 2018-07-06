@@ -146,13 +146,14 @@ public:
 
         // Grabbing pose from /camera_pose topic from Kinect data
         boost::shared_ptr<geometry_msgs::PoseStamped const> sharedPtr_cam;
-        sharedPtr_cam = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("camera_pose", ros::Duration(1.0));
+        sharedPtr_cam = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("camera_pose", ros::Duration(0.1));
         if (sharedPtr_cam != NULL){
             cam_pose = *sharedPtr_cam;
         }
         else {
             // No message received
             cam_pose.pose.position.x = cam_zero_pos.point.x;
+            cam_pose.pose.position.z = cam_zero_pos.point.z;
             cout << "No camera message.\n";
         }
 
@@ -205,7 +206,7 @@ public:
 
         // Grab pose from IR data
         boost::shared_ptr<geometry_msgs::PoseStamped const> sharedPtr_ir;
-        sharedPtr_ir = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("IR_pose", ros::Duration(1.0));
+        sharedPtr_ir = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("IR_pose", ros::Duration(0.1));
 
         if (sharedPtr_ir != NULL){
             ir_pose = *sharedPtr_ir;
