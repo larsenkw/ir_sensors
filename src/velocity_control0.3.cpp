@@ -18,6 +18,7 @@
 #include <math.h>
 #include <tf/transform_listener.h>
 #include <boost/bind.hpp>
+#include <ctime>
 using namespace std;
 
 
@@ -144,9 +145,15 @@ public:
     void controlLoop() {
         // Get poses from IR sensors and camera
 
+        // FIXME: print timing messages
+        std::clock_t start = std::clock();
+        cout << "==============================================================\n";
+        cout << "Timing messages\n";
+        cout << "pre-get camera: " << 0 << "s\n";
+
         // Grabbing pose from /camera_pose topic from Kinect data
         boost::shared_ptr<geometry_msgs::PoseStamped const> sharedPtr_cam;
-        sharedPtr_cam = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("camera_pose", ros::Duration(0.1));
+        sharedPtr_cam = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("camera_pose", ros::Duration(1.0));
         if (sharedPtr_cam != NULL){
             cam_pose = *sharedPtr_cam;
         }
@@ -156,6 +163,10 @@ public:
             cam_pose.pose.position.z = cam_zero_pos.point.z;
             cout << "No camera message.\n";
         }
+
+        //FIXME: print timing messages
+        std::clock_t end = std::clock();
+        cout << "post-get camera: " << end - start << "s\n";
 
         // // Grabbing body_tracker/skeleton message instead of pose
         // boost::shared_ptr<body_tracker_msgs::Skeleton const> sharedPtr_cam;
