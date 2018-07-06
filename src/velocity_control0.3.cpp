@@ -150,7 +150,7 @@ public:
         std::clock_t start = std::clock();
         cout << "==============================================================\n";
         cout << "Timing messages\n";
-        cout << "pre-get camera: " << 0 << "s\n";
+        cout << "pre-get camera: " << 0 << "ms\n";
 
         // Grabbing pose from /camera_pose topic from Kinect data
         boost::shared_ptr<geometry_msgs::PoseStamped const> sharedPtr_cam;
@@ -167,7 +167,7 @@ public:
 
         //FIXME: print timing messages
         std::clock_t end = std::clock();
-        cout << "post-get camera: " << setprecision(6) << (end - start) / CLOCKS_PER_SEC << "s\n";
+        cout << "post-get camera: " << setprecision(6) << 1000.0 * (end - start) / CLOCKS_PER_SEC << "ms\n";
 
         // // Grabbing body_tracker/skeleton message instead of pose
         // boost::shared_ptr<body_tracker_msgs::Skeleton const> sharedPtr_cam;
