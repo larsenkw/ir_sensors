@@ -28,7 +28,8 @@
   <node pkg="ir_sensors" type="ir_data_process.py" name="ir_data_process" />
 
   <!-- start up camera with body tracker -->
-  <node pkg="astra_body_tracker" type="astra_body_tracker_node" name="astra_body_tracker_node" />
+  <!--<node pkg="astra_body_tracker" type="astra_body_tracker_node" name="astra_body_tracker_node" />-->
+  <include file="$(find skeleton_markers)/launch/markers.launch" />
 
   <!-- node for grabbing the skeleton pose and republishing in correct format -->
   <node pkg="python_follower" type="gesture_kinect.py" name="gesture_kinect" />
@@ -42,7 +43,7 @@
   <!-- start velocity control node goint to my smoother -->
   <node pkg="ir_sensors" type="velocity_control" name="velocity_control" output="screen"/>
 
-  <!-- start my home-made velocity smoother node (use the turtlebot one if you can) -->
+  <!-- start my home-made velocity smoother node -->
   <node pkg="ir_sensors" type="vel_smoother.py" name="vel_smoother" />
 
 </launch>
