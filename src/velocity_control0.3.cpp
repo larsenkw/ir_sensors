@@ -584,7 +584,7 @@ int main(int argc, char **argv)
 
     while(ros::ok()) {
         server.controlLoop();
-        //ros::spinOnce();
+        ros::spinOnce();
         loop_rate.sleep();
     }
     //ros::spin();
