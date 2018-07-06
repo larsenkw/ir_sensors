@@ -1,3 +1,9 @@
+/*
+ *  This version of the controller works with the Kinect skeleton tracker
+ *  messages and requires the gesture_kinect node to run and publish pose
+ *  messages. If the skeleton is lost, it should publish a zero pose.
+ */
+
 #include "ros/ros.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "geometry_msgs/Twist.h"
@@ -137,68 +143,71 @@ public:
 
     void controlLoop() {
         // Get poses from IR sensors and camera
-        // boost::shared_ptr<geometry_msgs::PoseStamped const> sharedPtr;
-        // sharedPtr = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("camera_pose", ros::Duration(1.0));
-        // if (sharedPtr != NULL){
-        //     cam_pose = *sharedPtr;
-        // }
-        // else {
-        //     // No message received
-        //     cam_pose.pose.position.x = cam_zero_pos.point.x;
-        // }
 
-        // Grabbing body_tracker/skeleton message instead of pose
-        boost::shared_ptr<body_tracker_msgs::Skeleton const> sharedPtr_cam;
-        sharedPtr_cam = ros::topic::waitForMessage<body_tracker_msgs::Skeleton>("/body_tracker/skeleton", ros::Duration(0.1));
-        if (sharedPtr_cam != NULL) {
-            cam_skeleton = *sharedPtr_cam;
-            cout << "Body_id: " << body_id << endl;
-            cout << "Skeleton_id: " << cam_skeleton.body_id << endl;
-            if (body_id == -1) {
-                body_id = cam_skeleton.body_id;
-            }
-            if (body_id != cam_skeleton.body_id) {
-                if (using_ir) { // we lost the person, but they got close enough to be in the IR range, set new ID when they come back into view
-                    body_id = cam_skeleton.body_id;
-
-                    cout << "Updating body id\n";
-                }
-                else { // this person is an obstacle
-                    pub_obstacle_person.publish(cam_skeleton);
-
-                    cout << "Sending obstacle skeleton\n";
-                }
-            }
-            else { // the body_id matches
-                cam_pose.header.frame_id = "Cam_frame";
-                cam_pose.pose.position.x = cam_skeleton.joint_position_spine_mid.x;
-                cam_pose.pose.position.y = cam_skeleton.joint_position_spine_mid.y;
-                cam_pose.pose.position.z = cam_skeleton.joint_position_spine_mid.z;
-                cam_pose.pose.orientation.x = 0;
-                cam_pose.pose.orientation.y = 0;
-                cam_pose.pose.orientation.z = 0;
-                cam_pose.pose.orientation.w = 1;
-                pub_follow_person.publish(cam_skeleton);
-
-                cout << "Updating following skeleton\n";
-            }
+        // Grabbing pose from /camera_pose topic from Kinect data
+        boost::shared_ptr<geometry_msgs::PoseStamped const> sharedPtr_cam;
+        sharedPtr_cam = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("camera_pose", ros::Duration(1.0));
+        if (sharedPtr_cam != NULL){
+            cam_pose = *sharedPtr_cam;
         }
         else {
-            cam_pose.header.frame_id = "Cam_frame";
-            cam_pose.pose.position.x = 0;
-            cam_pose.pose.position.y = 0;
-            cam_pose.pose.position.z = 0;
-            cam_pose.pose.orientation.x = 0;
-            cam_pose.pose.orientation.y = 0;
-            cam_pose.pose.orientation.z = 0;
-            cam_pose.pose.orientation.w = 1;
+            // No message received
+            cam_pose.pose.position.x = cam_zero_pos.point.x;
         }
+
+        // // Grabbing body_tracker/skeleton message instead of pose
+        // boost::shared_ptr<body_tracker_msgs::Skeleton const> sharedPtr_cam;
+        // sharedPtr_cam = ros::topic::waitForMessage<body_tracker_msgs::Skeleton>("/body_tracker/skeleton", ros::Duration(0.1));
+        // if (sharedPtr_cam != NULL) {
+        //     cam_skeleton = *sharedPtr_cam;
+        //     cout << "Body_id: " << body_id << endl;
+        //     cout << "Skeleton_id: " << cam_skeleton.body_id << endl;
+        //     if (body_id == -1) {
+        //         body_id = cam_skeleton.body_id;
+        //     }
+        //     if (body_id != cam_skeleton.body_id) {
+        //         if (using_ir) { // we lost the person, but they got close enough to be in the IR range, set new ID when they come back into view
+        //             body_id = cam_skeleton.body_id;
+        //
+        //             cout << "Updating body id\n";
+        //         }
+        //         else { // this person is an obstacle
+        //             pub_obstacle_person.publish(cam_skeleton);
+        //
+        //             cout << "Sending obstacle skeleton\n";
+        //         }
+        //     }
+        //     else { // the body_id matches
+        //         cam_pose.header.frame_id = "Cam_frame";
+        //         cam_pose.pose.position.x = cam_skeleton.joint_position_spine_mid.x;
+        //         cam_pose.pose.position.y = cam_skeleton.joint_position_spine_mid.y;
+        //         cam_pose.pose.position.z = cam_skeleton.joint_position_spine_mid.z;
+        //         cam_pose.pose.orientation.x = 0;
+        //         cam_pose.pose.orientation.y = 0;
+        //         cam_pose.pose.orientation.z = 0;
+        //         cam_pose.pose.orientation.w = 1;
+        //         pub_follow_person.publish(cam_skeleton);
+        //
+        //         cout << "Updating following skeleton\n";
+        //     }
+        // }
+        // else {
+        //     cam_pose.header.frame_id = "Cam_frame";
+        //     cam_pose.pose.position.x = 0;
+        //     cam_pose.pose.position.y = 0;
+        //     cam_pose.pose.position.z = 0;
+        //     cam_pose.pose.orientation.x = 0;
+        //     cam_pose.pose.orientation.y = 0;
+        //     cam_pose.pose.orientation.z = 0;
+        //     cam_pose.pose.orientation.w = 1;
+        // }
 
         //FIXME: Print message when the pose is 0
         if (cam_pose.pose.position.x == 0) {
             cout << "Pose is 0!!" << endl;
         }
 
+        // Grab pose from IR data
         boost::shared_ptr<geometry_msgs::PoseStamped const> sharedPtr_ir;
         sharedPtr_ir = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("IR_pose", ros::Duration(0.1));
         if (sharedPtr_ir != NULL){
