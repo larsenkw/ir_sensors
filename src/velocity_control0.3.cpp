@@ -130,7 +130,7 @@ public:
         cam_delta = 0.10;
 
         // Common values
-        d_offset = 0.90; // m
+        d_offset = 1.00; // m
         delta = 0.10; // m
         correcting_direction = 0;
         k_lin_forward = 0.8;
