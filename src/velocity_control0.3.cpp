@@ -580,11 +580,11 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "velocity_control");
     Server server;
 
-    ros::Rate loop_rate(20);
+    ros::Rate loop_rate(60);
 
     while(ros::ok()) {
         server.controlLoop();
-        ros::spinOnce();
+        //ros::spinOnce();
         loop_rate.sleep();
     }
     //ros::spin();
